@@ -1,0 +1,146 @@
+/**
+ * Seasonal Menus Database Operations
+ * CRUD operations for seasonal menus
+ */
+
+import * as SQLite from 'expo-sqlite';
+import { SeasonalMenu } from '../config/config';
+
+// Get database instance
+function getDatabase(): SQLite.SQLiteDatabase {
+  const { getDatabase: dbGetter } = require('./db');
+  return dbGetter();
+}
+
+// Seasonal menu row type (internal to this module, not exported)
+interface SeasonalMenuRow {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  isActive: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Add a new seasonal menu
+ */
+export async function addSeasonalMenu(menu: SeasonalMenu): Promise<void> {
+  const database = getDatabase();
+  
+  await database.runAsync(
+    `INSERT INTO seasonal_menus (id, name, description, startDate, endDate, startTime, endTime, isActive, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      menu.id,
+      menu.name,
+      menu.description,
+      menu.startDate,
+      menu.endDate,
+      menu.startTime,
+      menu.endTime,
+      menu.isActive ? 1 : 0,
+      menu.createdAt,
+      menu.updatedAt,
+    ]
+  );
+}
+
+/**
+ * Get all seasonal menus
+ */
+export async function getAllSeasonalMenus(): Promise<SeasonalMenu[]> {
+  const database = getDatabase();
+  
+  const result = await database.getAllAsync<SeasonalMenuRow>(
+    'SELECT * FROM seasonal_menus ORDER BY startDate DESC'
+  );
+  
+  return result.map(row => ({
+    ...row,
+    isActive: Boolean(row.isActive),
+    items: [],
+  }));
+}
+
+/**
+ * Get seasonal menu by ID
+ */
+export async function getSeasonalMenuById(id: string): Promise<SeasonalMenu | null> {
+  const database = getDatabase();
+  
+  const result = await database.getFirstAsync<SeasonalMenuRow>(
+    'SELECT * FROM seasonal_menus WHERE id = ?',
+    [id]
+  );
+  
+  if (!result) return null;
+  
+  return {
+    ...result,
+    isActive: Boolean(result.isActive),
+    items: [],
+  };
+}
+
+/**
+ * Update a seasonal menu
+ */
+export async function updateSeasonalMenu(menu: SeasonalMenu): Promise<void> {
+  const database = getDatabase();
+  
+  await database.runAsync(
+    `UPDATE seasonal_menus SET 
+      name = ?, description = ?, startDate = ?, endDate = ?, 
+      startTime = ?, endTime = ?, isActive = ?, updatedAt = ?
+     WHERE id = ?`,
+    [
+      menu.name,
+      menu.description,
+      menu.startDate,
+      menu.endDate,
+      menu.startTime,
+      menu.endTime,
+      menu.isActive ? 1 : 0,
+      menu.updatedAt,
+      menu.id,
+    ]
+  );
+}
+
+/**
+ * Delete a seasonal menu
+ */
+export async function deleteSeasonalMenu(id: string): Promise<void> {
+  const database = getDatabase();
+  
+  // First remove seasonal menu reference from menu items
+  await database.runAsync('UPDATE menu_items SET seasonalMenuId = NULL WHERE seasonalMenuId = ?', [id]);
+  
+  // Delete the seasonal menu
+  await database.runAsync('DELETE FROM seasonal_menus WHERE id = ?', [id]);
+}
+
+/**
+ * Get active seasonal menus
+ */
+export async function getActiveSeasonalMenus(): Promise<SeasonalMenu[]> {
+  const database = getDatabase();
+  
+  const result = await database.getAllAsync<SeasonalMenuRow>(
+    'SELECT * FROM seasonal_menus WHERE isActive = 1 ORDER BY startDate DESC'
+  );
+  
+  return result.map(row => ({
+    ...row,
+    isActive: Boolean(row.isActive),
+    items: [],
+  }));
+}
+
+// Export type for use by other modules
+export type { SeasonalMenuRow };
