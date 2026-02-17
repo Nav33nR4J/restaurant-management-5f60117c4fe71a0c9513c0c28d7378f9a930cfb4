@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Animated, Modal, StatusBar, TouchableOpacity, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
@@ -14,6 +15,7 @@ type ValidationStatus = "IDLE" | "LOADING" | "ENABLED" | "DISABLED" | "INVALID";
 
 // Inner component that uses the theme
 function PromotionsScreenContent() {
+  const router = useRouter();
   const { toggleTheme, isDark, theme } = useTheme();
   const themeIconAnim = useRef(new Animated.Value(isDark ? 1 : 0)).current;
 
