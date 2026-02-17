@@ -159,7 +159,9 @@ function NavigationWrapper() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="order" options={{ title: "Order" }} />
         <Stack.Screen name="menu" options={{ title: "" }} />
-        <Stack.Screen name="cart" options={{ title: "Cart" }} />
+        <Stack.Screen name="cart" options={{ title: "TheCart" }} />
+        <Stack.Screen name="promotions" options={{ title: "Promotions" }} />
+        <Stack.Screen name="promotions/create" options={{ headerShown: false }} />
       </Stack>
 
       <StatusBar

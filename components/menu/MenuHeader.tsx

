@@ -1,7 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { isBranch, isHQ } from "../../config/accessControl";
 import { SeasonalMenu } from "../../config/config";
 import { withOpacity } from "../../utils/colorUtils";
@@ -19,6 +17,7 @@ interface MenuHeaderProps {
   resolvedMode: "light" | "dark";
   onToggleTheme?: () => void;
   onAddMenuItem?: () => void;
+  onPromotionsPress?: () => void;
 }
 
 /**
@@ -32,16 +31,17 @@ export function MenuHeader({
   resolvedMode,
   onToggleTheme,
   onAddMenuItem,
+  onPromotionsPress,
 }: MenuHeaderProps) {
   const isHQUser = useMemo(() => isHQ(), []);
   const isBranchUser = useMemo(() => isBranch(), []);
 
   const handlePromotionsPress = () => {
-    try {
-      // Navigate to the promotions screen
-      router.push("/promotions");
-    } catch (error) {
-      console.log("Could not navigate to promotions:", error);
+    if (onPromotionsPress) {
+      onPromotionsPress();
+    } else {
+      // Fallback: open promotions app via deep link
+      Linking.openURL("promotionsapp://");
     }
   };
 
@@ -67,29 +67,26 @@ export function MenuHeader({
         {/* Right side action buttons */}
         <View style={styles.actionsContainer}>
           {isHQUser && (
-            <View style={[styles.hqActionsContainer, { backgroundColor: theme.primary }]}>
-              <Pressable
-                style={styles.hqActionButton}
+            <>
+              <IconButton
+                name="pricetag"
                 onPress={handlePromotionsPress}
-              >
-                <Ionicons
-                  name="pricetag-outline"
-                  size={22}
-                  color="#FFF"
-                />
-              </Pressable>
-              <View style={styles.separator} />
-              <Pressable
-                style={styles.hqActionButton}
-                onPress={onAddMenuItem}
-              >
-                <Ionicons
+                size={24}
+                variant="default"
+                theme={theme}
+                accessibilityLabel="Promotions"
+              />
+              {onAddMenuItem && (
+                <IconButton
                   name="add"
-                  size={22}
-                  color="#FFF"
+                  onPress={onAddMenuItem}
+                  size={28}
+                  variant="primary"
+                  theme={theme}
+                  accessibilityLabel="Add menu item"
                 />
-              </Pressable>
-            </View>
+              )}
+            </>
           )}
           {isBranchUser && onToggleTheme && (
             <IconButton
@@ -114,20 +111,5 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 16 },
   locationText: { fontSize: 14, marginBottom: 4 },
   actionsContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
-  hqActionsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 25,
-    overflow: "hidden",
-  },
-  hqActionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  separator: {
-    width: 1,
-    height: 24,
-    backgroundColor: "rgba(255,255,255,0.3)",
-  },
 });
 

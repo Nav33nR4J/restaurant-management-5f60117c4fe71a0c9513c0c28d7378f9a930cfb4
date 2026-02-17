@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
+  useColorScheme
 } from "react-native";
 
 import { useEffect, useMemo, useRef } from "react";
@@ -98,6 +98,7 @@ export default function Home() {
     Loggers.flavor.info(`Flavor changed to ${newFlavor}`, { newFlavor });
   };
 
+
   if (isLoading) {
     return (
       <View style={[appStyles.home.container, { backgroundColor: theme.background }]}>
@@ -160,6 +161,7 @@ export default function Home() {
               ))}
             </View>
           </View>
+
 
           <Pressable
             style={[appStyles.home.cta, { backgroundColor: theme.primary }]}
