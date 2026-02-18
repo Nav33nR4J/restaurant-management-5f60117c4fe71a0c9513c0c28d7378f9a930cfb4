@@ -1055,6 +1055,308 @@ const appStylesRaw = {
     },
   },
 
+  // --- Bill Modal ---
+  bill: {
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    modalContent: {
+      width: '100%',
+      maxHeight: '80%',
+      borderRadius: 16,
+      padding: 20,
+      elevation: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    restaurantName: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: '#333',
+      marginBottom: 4,
+    },
+    billTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#666',
+      letterSpacing: 4,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: '#E0E0E0',
+      marginVertical: 12,
+    },
+    itemsContainer: {
+      maxHeight: 200,
+      marginBottom: 12,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F0F0F0',
+    },
+    itemInfo: {
+      flex: 1,
+    },
+    itemName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#333',
+    },
+    itemQuantity: {
+      fontSize: 13,
+      color: '#888',
+      marginTop: 2,
+    },
+    itemTotal: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#333',
+    },
+    summaryContainer: {
+      marginTop: 8,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+    },
+    summaryLabel: {
+      fontSize: 14,
+      color: '#666',
+    },
+    summaryValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#333',
+    },
+    totalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    totalLabel: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: '#333',
+    },
+    totalValue: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: '#333',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20,
+      gap: 12,
+    },
+    secondaryButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      borderWidth: 2,
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    primaryButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#FFF',
+    },
+  },
+
+  // --- Coupons ---
+  coupons: {
+    couponSection: {
+      position: 'absolute',
+      top: 70,
+      left: 16,
+      right: 16,
+      borderRadius: 16,
+      padding: 16,
+      elevation: 8,
+      zIndex: 10,
+    },
+    couponSectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      marginBottom: 12,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    couponInput: {
+      flex: 1,
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 2,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    applyButton: {
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    applyButtonText: {
+      color: '#FFF',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    errorText: {
+      color: '#EF4444',
+      fontSize: 12,
+      marginTop: 8,
+    },
+    viewCouponsButton: {
+      marginTop: 12,
+      alignItems: 'center',
+    },
+    viewCouponsText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    appliedCouponContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    appliedCoupon: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 8,
+    },
+    appliedCouponCode: {
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    appliedCouponDiscount: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    removeCoupon: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      width: '100%',
+      maxHeight: '70%',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    closeButton: {
+      fontSize: 24,
+      fontWeight: '700',
+    },
+    listContainer: {
+      paddingBottom: 20,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+    },
+    couponCard: {
+      borderWidth: 2,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 12,
+    },
+    couponContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    couponInfo: {
+      flex: 1,
+    },
+    couponCode: {
+      fontSize: 16,
+      fontWeight: '800',
+      marginBottom: 4,
+    },
+    couponTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#666',
+      marginBottom: 2,
+    },
+    couponDescription: {
+      fontSize: 13,
+      color: '#888',
+    },
+    couponMinOrder: {
+      fontSize: 11,
+      color: '#999',
+      marginTop: 4,
+    },
+    couponBadge: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    couponBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    unavailableText: {
+      fontSize: 11,
+      color: '#999',
+      marginTop: 8,
+      fontStyle: 'italic',
+    },
+  },
+
   // --- Order ---
   order: {
     container: {

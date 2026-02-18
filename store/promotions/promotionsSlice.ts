@@ -1,18 +1,29 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { api } from "../../utils/promotions/api";
 
+// Custom item discount for CUSTOM_ITEMS promotions
+export interface CustomItemDiscount {
+  item_id: string;
+  item_name: string;
+  discount_type: "PERCENTAGE" | "FIXED";
+  discount_value: number;
+}
+
 export interface Promotion {
   id: string;
   promo_code: string;
-  discount_type: "percentage" | "fixed";
-  discount_value: number;
-  min_order_amount?: number;
-  max_uses?: number;
-  current_uses?: number;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-  description?: string;
+  title: string;
+  type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+  value: number;
+  start_at: string;
+  end_at: string;
+  status: "ACTIVE" | "INACTIVE";
+  usage_limit: number | null;
+  usage_count: number;
+  min_order_amount: number;
+  max_discount_amount: number | null;
+  description: string | null;
+  custom_items?: CustomItemDiscount[];
 }
 
 interface PromotionsState {
@@ -33,7 +44,7 @@ export const fetchPromotions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get("/promotions");
-      return response.data;
+      return response.data.data as Promotion[];
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch promotions");
     }
@@ -45,7 +56,7 @@ export const createPromotion = createAsyncThunk(
   async (data: Partial<Promotion>, { rejectWithValue }) => {
     try {
       const response = await api.post("/promotions", data);
-      return response.data;
+      return response.data.data as Promotion;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to create promotion");
     }
@@ -57,7 +68,7 @@ export const updatePromotion = createAsyncThunk(
   async ({ id, data }: { id: string; data: Partial<Promotion> }, { rejectWithValue }) => {
     try {
       const response = await api.put(`/promotions/${id}`, data);
-      return response.data;
+      return response.data.data as Promotion;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to update promotion");
     }
@@ -80,8 +91,8 @@ export const togglePromotionStatus = createAsyncThunk(
   "promotions/toggleStatus",
   async ({ id, isActive }: { id: string; isActive: boolean }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/promotions/${id}`, { is_active: isActive });
-      return response.data;
+      const response = await api.patch(`/promotions/${id}/toggle`);
+      return response.data.data as Promotion;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to toggle promotion status");
     }
@@ -174,3 +185,4 @@ const promotionsSlice = createSlice({
 
 export const { clearError } = promotionsSlice.actions;
 export default promotionsSlice.reducer;
+

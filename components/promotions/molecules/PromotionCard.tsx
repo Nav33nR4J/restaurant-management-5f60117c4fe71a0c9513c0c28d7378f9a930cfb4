@@ -7,15 +7,18 @@ interface PromotionCardProps {
   promotion: {
     id: string;
     promo_code: string;
-    discount_type: "percentage" | "fixed";
-    discount_value: number;
-    min_order_amount?: number;
-    max_uses?: number;
-    current_uses?: number;
-    start_date: string;
-    end_date: string;
-    is_active: boolean;
-    description?: string;
+    title: string;
+    type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+    value: number;
+    start_at: string;
+    end_at: string;
+    status: "ACTIVE" | "INACTIVE";
+    usage_limit: number | null;
+    usage_count: number;
+    min_order_amount: number;
+    max_discount_amount: number | null;
+    description: string | null;
+    custom_items?: any[];
   };
   onEdit: (promotion: any) => void;
   onToggleStatus: (promotion: any) => void;
@@ -38,15 +41,26 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
   };
 
   const formatDiscount = () => {
-    if (promotion.discount_type === "percentage") {
-      return `${promotion.discount_value}% OFF`;
+    if (promotion.type === "PERCENTAGE") {
+      return `${promotion.value}% OFF`;
     }
-    return `₹${promotion.discount_value} OFF`;
+    if (promotion.type === "FIXED") {
+      return `₹${promotion.value} OFF`;
+    }
+    // CUSTOM_ITEMS
+    const itemsCount = promotion.custom_items?.length || 0;
+    return `${itemsCount} Items`;
   };
 
-  const isExpired = new Date(promotion.end_date) < new Date();
-  const isNotStarted = new Date(promotion.start_date) > new Date();
-  const isActive = promotion.is_active && !isExpired && !isNotStarted;
+  const getTypeLabel = () => {
+    if (promotion.type === "PERCENTAGE") return "%";
+    if (promotion.type === "FIXED") return "₹";
+    return "Items";
+  };
+
+  const isExpired = new Date(promotion.end_at) < new Date();
+  const isNotStarted = new Date(promotion.start_at) > new Date();
+  const isActive = promotion.status === "ACTIVE" && !isExpired && !isNotStarted;
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card }]}>
@@ -56,6 +70,17 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             {promotion.promo_code}
           </Text>
           <View
+            style={[
+              styles.typeBadge,
+              { backgroundColor: theme.secondary + "20" },
+            ]}
+          >
+            <Text style={[styles.typeText, { color: theme.secondary }]}>
+              {promotion.type === "CUSTOM_ITEMS" ? "Custom" : promotion.type === "PERCENTAGE" ? "%" : "₹"}
+            </Text>
+          </View>
+        </View>
+        <View
             style={[
               styles.statusBadge,
               {
@@ -83,16 +108,20 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
                 ? "Expired"
                 : isNotStarted
                 ? "Not Started"
-                : promotion.is_active
+                : promotion.status === "ACTIVE"
                 ? "Active"
                 : "Inactive"}
             </Text>
           </View>
-        </View>
-        <Text style={[styles.discount, { color: theme.secondary }]}>
-          {formatDiscount()}
-        </Text>
       </View>
+
+      <Text style={[styles.title, { color: theme.text }]}>
+        {promotion.title}
+      </Text>
+
+      <Text style={[styles.discount, { color: theme.secondary }]}>
+        {formatDiscount()}
+      </Text>
 
       {promotion.description && (
         <Text style={[styles.description, { color: theme.textSecondary }]}>
@@ -106,7 +135,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             Start Date:
           </Text>
           <Text style={[styles.detailValue, { color: theme.text }]}>
-            {formatDate(promotion.start_date)}
+            {formatDate(promotion.start_at)}
           </Text>
         </View>
         <View style={styles.detailRow}>
@@ -114,10 +143,10 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             End Date:
           </Text>
           <Text style={[styles.detailValue, { color: theme.text }]}>
-            {formatDate(promotion.end_date)}
+            {formatDate(promotion.end_at)}
           </Text>
         </View>
-        {promotion.min_order_amount && (
+        {promotion.min_order_amount > 0 && (
           <View style={styles.detailRow}>
             <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>
               Min Order:
@@ -127,14 +156,45 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
             </Text>
           </View>
         )}
-        {promotion.max_uses && (
+        {promotion.max_discount_amount && (
+          <View style={styles.detailRow}>
+            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>
+              Max Discount:
+            </Text>
+            <Text style={[styles.detailValue, { color: theme.text }]}>
+              ₹{promotion.max_discount_amount}
+            </Text>
+          </View>
+        )}
+        {promotion.usage_limit && (
           <View style={styles.detailRow}>
             <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>
               Uses:
             </Text>
             <Text style={[styles.detailValue, { color: theme.text }]}>
-              {promotion.current_uses || 0} / {promotion.max_uses}
+              {promotion.usage_count || 0} / {promotion.usage_limit}
             </Text>
+          </View>
+        )}
+        {promotion.type === "CUSTOM_ITEMS" && promotion.custom_items && promotion.custom_items.length > 0 && (
+          <View style={styles.customItemsSection}>
+            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>
+              Discounted Items ({promotion.custom_items.length}):
+            </Text>
+            <View style={styles.customItemsList}>
+              {promotion.custom_items.map((ci: any) => (
+                <View key={ci.item_id} style={[styles.customItemChip, { backgroundColor: theme.primary + "15" }]}>
+                  <Text style={[styles.customItemName, { color: theme.text }]}>
+                    {ci.item_name}
+                  </Text>
+                  <Text style={[styles.customItemDiscount, { color: theme.primary }]}>
+                    {ci.discount_type === "PERCENTAGE"
+                      ? `${ci.discount_value}% off`
+                      : `₹${ci.discount_value} off`}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
       </View>
@@ -181,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   codeContainer: {
     flexDirection: "row",
@@ -192,6 +252,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -201,9 +270,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  title: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
   discount: {
     fontSize: 20,
     fontWeight: "800",
+    marginBottom: 8,
   },
   description: {
     fontSize: 14,
@@ -250,4 +325,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  customItemsSection: {
+    marginBottom: 12,
+  },
+  customItemsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 6,
+  },
+  customItemChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  customItemName: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  customItemDiscount: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
 });
+

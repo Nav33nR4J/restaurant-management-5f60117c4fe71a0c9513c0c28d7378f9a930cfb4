@@ -1,11 +1,11 @@
-import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import React, { createContext, ReactNode, useContext } from "react";
 import { useColorScheme } from "react-native";
+import { useAppSelector } from "../../store/hooks";
 import { colors, ThemeColors } from "./colors";
 
 interface ThemeContextType {
   theme: ThemeColors;
   isDark: boolean;
-  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -15,21 +15,14 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const systemColorScheme = useColorScheme();
-  const [isDark, setIsDark] = useState(systemColorScheme === "dark");
-
-  useEffect(() => {
-    setIsDark(systemColorScheme === "dark");
-  }, [systemColorScheme]);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
-
+  const system = useColorScheme() ?? "light";
+  const storeMode = useAppSelector((state) => state.theme.mode);
+  const resolvedMode = storeMode === "light" || storeMode === "dark" ? storeMode : system;
+  const isDark = resolvedMode === "dark";
   const theme = isDark ? colors.dark : colors.light;
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark }}>
       {children}
     </ThemeContext.Provider>
   );

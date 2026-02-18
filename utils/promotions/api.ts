@@ -71,6 +71,37 @@ export const getErrorMessage = (error: unknown): string => {
   return "An unexpected error occurred";
 };
 
+// Menu Item type
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+}
+
+// Promotion types
+export type PromoType = "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+export type PromoStatus = "ACTIVE" | "INACTIVE";
+
+// Custom item discount for CUSTOM_ITEMS promotions
+export interface CustomItemDiscount {
+  item_id: string;
+  item_name: string;
+  discount_type: "PERCENTAGE" | "FIXED";
+  discount_value: number;
+}
+
+// Combo discount for CUSTOM_ITEMS promotions
+export interface ComboDiscount {
+  combo_name: string;
+  item_ids: string[];
+  item_names: string[];
+  discount_type: "PERCENTAGE" | "FIXED";
+  discount_value: number;
+  min_items_required: number;
+}
+
 // Promotion API endpoints
 export const promotionApi = {
   // Get all promotions
@@ -88,16 +119,28 @@ export const promotionApi = {
   // Delete promotion
   delete: (id: string) => api.delete(`/promotions/${id}`),
 
-  // Validate promo code
-  validate: (promoCode: string, orderAmount: number) =>
+  // Toggle promotion status
+  toggleStatus: (id: string, isActive: boolean) =>
+    api.patch(`/promotions/${id}/toggle`),
+
+  // Validate promo code with order details
+  validate: (
+    promoCode: string, 
+    orderAmount: number, 
+    orderedItems?: { item_id: string; quantity: number; price: number }[]
+  ) =>
     api.post("/promotions/validate", {
       promo_code: promoCode,
       order_amount: orderAmount,
+      ordered_items: orderedItems,
     }),
+};
 
-  // Toggle promotion status
-  toggleStatus: (id: string, isActive: boolean) =>
-    api.put(`/promotions/${id}`, { is_active: isActive }),
+// Menu Items API
+export const menuApi = {
+  // Get all menu items
+  getAll: () => api.get<{ success: boolean; data: MenuItem[] }>("/menu-items"),
 };
 
 export default api;
+

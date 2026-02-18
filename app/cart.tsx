@@ -1,9 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   FlatList,
+  Modal,
   Pressable,
+  ScrollView,
   Text,
   View,
   useColorScheme,
@@ -48,6 +50,103 @@ const CartItemComponent = memo(({ item, theme, onAdd, onRemove }: {
 ));
 CartItemComponent.displayName = "CartItemComponent";
 
+// Bill Modal Component - Physical white bill design
+const BillModal = ({
+  visible,
+  onClose,
+  items,
+  subtotal,
+  tax,
+  total,
+  theme,
+  onCheckout,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  items: { id: string; name: string; price: number; quantity: number }[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  theme: any;
+  onCheckout: () => void;
+}) => (
+  <Modal
+    visible={visible}
+    animationType="slide"
+    transparent={true}
+    onRequestClose={onClose}
+  >
+    <View style={appStyles.bill.modalOverlay}>
+      <View style={[appStyles.bill.modalContent, { backgroundColor: '#FFFFFF' }]}>
+        {/* Bill Header */}
+        <View style={appStyles.bill.header}>
+          <Text style={appStyles.bill.restaurantName}>Restaurant</Text>
+          <Text style={appStyles.bill.billTitle}>BILL</Text>
+          <View style={appStyles.bill.divider} />
+        </View>
+
+        {/* Cart Items */}
+        <ScrollView style={appStyles.bill.itemsContainer}>
+          {items.map((item) => (
+            <View key={item.id} style={appStyles.bill.itemRow}>
+              <View style={appStyles.bill.itemInfo}>
+                <Text style={appStyles.bill.itemName}>{item.name}</Text>
+                <Text style={appStyles.bill.itemQuantity}>
+                  {item.quantity} × ₹{item.price}
+                </Text>
+              </View>
+              <Text style={appStyles.bill.itemTotal}>
+                ₹{(item.price * item.quantity).toFixed(2)}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Bill Summary */}
+        <View style={appStyles.bill.summaryContainer}>
+          <View style={appStyles.bill.divider} />
+          
+          <View style={appStyles.bill.summaryRow}>
+            <Text style={appStyles.bill.summaryLabel}>Subtotal</Text>
+            <Text style={appStyles.bill.summaryValue}>₹{subtotal.toFixed(2)}</Text>
+          </View>
+          
+          <View style={appStyles.bill.summaryRow}>
+            <Text style={appStyles.bill.summaryLabel}>Tax (5%)</Text>
+            <Text style={appStyles.bill.summaryValue}>₹{tax.toFixed(2)}</Text>
+          </View>
+          
+          <View style={appStyles.bill.divider} />
+          
+          <View style={appStyles.bill.totalRow}>
+            <Text style={appStyles.bill.totalLabel}>TOTAL</Text>
+            <Text style={appStyles.bill.totalValue}>₹{total.toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={appStyles.bill.buttonContainer}>
+          <Pressable
+            onPress={onClose}
+            style={[appStyles.bill.secondaryButton, { borderColor: theme.primary }]}
+          >
+            <Text style={[appStyles.bill.secondaryButtonText, { color: theme.primary }]}>
+              Close
+            </Text>
+          </Pressable>
+          
+          <Pressable
+            onPress={onCheckout}
+            style={[appStyles.bill.primaryButton, { backgroundColor: theme.primary }]}
+          >
+            <Text style={appStyles.bill.primaryButtonText}>Checkout</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
 export default function CartPage() {
   const { safePush } = useSafeNavigation(300);
   const dispatch = useAppDispatch();
@@ -56,6 +155,7 @@ export default function CartPage() {
   const flavor = useAppSelector((state) => state.flavor.currentFlavor);
   const system = useColorScheme() ?? "light";
   const resolvedMode = mode === "light" || mode === "dark" ? mode : system;
+  const [showBill, setShowBill] = useState(false);
 
   const theme = useMemo(() => getTheme(flavor, resolvedMode), [flavor, resolvedMode]);
 
@@ -63,6 +163,10 @@ export default function CartPage() {
     items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items]
   );
+
+  // Calculate tax (5%) and grand total
+  const tax = useMemo(() => total * 0.05, [total]);
+  const grandTotal = useMemo(() => total + tax, [total, tax]);
 
   // Memoized handlers
   const handleAddItem = useCallback((item: typeof items[0]) => {
@@ -89,6 +193,20 @@ export default function CartPage() {
   const handleToggleTheme = useCallback(() => {
     dispatch(toggleTheme());
   }, [dispatch]);
+
+  const handleProceedToPayment = useCallback(() => {
+    setShowBill(true);
+  }, []);
+
+  const handleCloseBill = useCallback(() => {
+    setShowBill(false);
+  }, []);
+
+  const handleCheckout = useCallback(() => {
+    setShowBill(false);
+    // Navigate to checkout page
+    router.push("/checkout");
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -157,12 +275,24 @@ export default function CartPage() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={handleClearCart}
+            onPress={handleProceedToPayment}
           >
-            <Text style={appStyles.cart.checkoutText}>Checkout →</Text>
+            <Text style={appStyles.cart.checkoutText}>Proceed to Payment →</Text>
           </Pressable>
         </View>
       </LinearGradient>
+
+      {/* Bill Modal */}
+      <BillModal
+        visible={showBill}
+        onClose={handleCloseBill}
+        items={items}
+        subtotal={total}
+        tax={tax}
+        total={grandTotal}
+        theme={theme}
+        onCheckout={handleCheckout}
+      />
     </View>
   );
 }

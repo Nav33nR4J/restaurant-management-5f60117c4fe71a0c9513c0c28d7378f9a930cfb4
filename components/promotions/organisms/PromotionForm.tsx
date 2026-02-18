@@ -1,24 +1,41 @@
-import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  Alert,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { useSelector } from "react-redux";
+import { selectAllMenuItems } from "../../../store/menuSlice";
 import { useTheme } from "../../../theme/promotions/ThemeProvider";
 import { Button } from "../atoms/Button";
-import { Checkbox } from "../atoms/Checkbox";
 import { Input } from "../atoms/Input";
 import { Text } from "../atoms/Text";
+import { MenuItemOption, MenuItemPicker } from "../molecules/MenuItemPicker";
 import { ToggleSwitch } from "../molecules/ToggleSwitch";
 
 interface PromotionFormProps {
   initialData?: {
     id?: string;
     promo_code: string;
-    discount_type: "percentage" | "fixed";
-    discount_value: number;
-    min_order_amount?: number;
-    max_uses?: number;
+    title: string;
+    type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+    value: number;
+    min_order_amount: number;
+    max_discount_amount?: number;
+    usage_limit?: number | null;
     start_date: string;
     end_date: string;
     is_active: boolean;
     description?: string;
+    custom_items?: {
+      item_id: string;
+      item_name: string;
+      discount_type: "PERCENTAGE" | "FIXED";
+      discount_value: number;
+    }[];
   };
   onSubmit: (data: any) => void;
   onCancel: () => void;
@@ -33,31 +50,63 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
 }) => {
   const { theme } = useTheme();
 
+  // Get menu items from Redux store
+  const reduxMenuItems = useSelector(selectAllMenuItems);
+  const menuItemOptions = useMemo<MenuItemOption[]>(
+    () =>
+      reduxMenuItems
+        .filter((item) => item.isAvailable)
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          category: item.category,
+        })),
+    [reduxMenuItems]
+  );
+
   const [promoCode, setPromoCode] = useState(initialData?.promo_code || "");
-  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
-    initialData?.discount_type || "percentage"
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [discountType, setDiscountType] = useState<"PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS">(
+    initialData?.type || "PERCENTAGE"
   );
   const [discountValue, setDiscountValue] = useState(
-    initialData?.discount_value?.toString() || ""
+    initialData?.value?.toString() || ""
   );
   const [minOrderAmount, setMinOrderAmount] = useState(
-    initialData?.min_order_amount?.toString() || ""
+    initialData?.min_order_amount?.toString() || "0"
   );
-  const [maxUses, setMaxUses] = useState(
-    initialData?.max_uses?.toString() || ""
+  const [maxDiscountAmount, setMaxDiscountAmount] = useState(
+    initialData?.max_discount_amount?.toString() || ""
+  );
+  const [usageLimit, setUsageLimit] = useState(
+    initialData?.usage_limit != null ? initialData.usage_limit.toString() : ""
   );
   const [startDate, setStartDate] = useState(initialData?.start_date || "");
   const [endDate, setEndDate] = useState(initialData?.end_date || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
+  const [showMenuPicker, setShowMenuPicker] = useState(false);
+  const [customItems, setCustomItems] = useState(
+    initialData?.custom_items || []
+  );
 
   const validateForm = () => {
     if (!promoCode.trim()) {
       Alert.alert("Error", "Promo code is required");
       return false;
     }
-    if (!discountValue || parseFloat(discountValue) <= 0) {
+    if (!title.trim()) {
+      Alert.alert("Error", "Title is required");
+      return false;
+    }
+    if (discountType !== "CUSTOM_ITEMS" && (!discountValue || parseFloat(discountValue) <= 0)) {
       Alert.alert("Error", "Valid discount value is required");
+      return false;
+    }
+    if (discountType === "PERCENTAGE" && parseFloat(discountValue) > 100) {
+      Alert.alert("Error", "Percentage cannot exceed 100");
       return false;
     }
     if (!startDate) {
@@ -72,24 +121,42 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
       Alert.alert("Error", "End date must be after start date");
       return false;
     }
+    if (discountType === "CUSTOM_ITEMS" && customItems.length === 0) {
+      Alert.alert("Error", "Please select at least one menu item");
+      return false;
+    }
     return true;
   };
 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    // Format dates to datetime
+    const formatDateTime = (dateStr: string) => {
+      return new Date(dateStr).toISOString().replace("T", " ").substring(0, 19);
+    };
+
     onSubmit({
       id: initialData?.id,
       promo_code: promoCode.toUpperCase().trim(),
-      discount_type: discountType,
-      discount_value: parseFloat(discountValue),
-      min_order_amount: minOrderAmount ? parseFloat(minOrderAmount) : null,
-      max_uses: maxUses ? parseInt(maxUses) : null,
-      start_date: startDate,
-      end_date: endDate,
+      title: title.trim(),
+      type: discountType,
+      value: discountType === "CUSTOM_ITEMS" ? 0 : parseFloat(discountValue),
+      min_order_amount: minOrderAmount ? parseFloat(minOrderAmount) : 0,
+      max_discount_amount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
+      usage_limit: usageLimit ? parseInt(usageLimit) : null,
+      start_at: formatDateTime(startDate),
+      end_at: formatDateTime(endDate),
       description: description.trim() || null,
-      is_active: isActive,
+      status: isActive ? "ACTIVE" : "INACTIVE",
+      custom_items: discountType === "CUSTOM_ITEMS" ? customItems : [],
     });
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toISOString().split("T")[0];
   };
 
   return (
@@ -106,50 +173,159 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.text }]}>Discount Type *</Text>
-        <View style={styles.radioGroup}>
-          <View style={styles.radioOption}>
-            <Checkbox
-              value={discountType === "percentage"}
-              onValueChange={() => setDiscountType("percentage")}
-              color={theme.primary}
-            />
-            <Text style={[styles.radioLabel, { color: theme.text }]}>
-              Percentage (%)
-            </Text>
-          </View>
-          <View style={styles.radioOption}>
-            <Checkbox
-              value={discountType === "fixed"}
-              onValueChange={() => setDiscountType("fixed")}
-              color={theme.primary}
-            />
-            <Text style={[styles.radioLabel, { color: theme.text }]}>
-              Fixed Amount (₹)
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: theme.text }]}>Discount Value *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Title *</Text>
         <Input
-          placeholder={
-            discountType === "percentage"
-              ? "Enter percentage (e.g., 20)"
-              : "Enter amount (e.g., 100)"
-          }
-          value={discountValue}
-          onChangeText={setDiscountValue}
-          keyboardType="numeric"
+          placeholder="Enter promotion title"
+          value={title}
+          onChangeText={setTitle}
           style={{ backgroundColor: theme.card, color: theme.text }}
         />
       </View>
 
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: theme.text }]}>Discount Type *</Text>
+        <View style={styles.discountTypeContainer}>
+          <TouchableOpacity
+            style={[
+              styles.discountTypeButton,
+              {
+                backgroundColor:
+                  discountType === "PERCENTAGE" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => setDiscountType("PERCENTAGE")}
+          >
+            <RNText
+              style={[
+                styles.discountTypeText,
+                {
+                  color: discountType === "PERCENTAGE" ? "#fff" : theme.text,
+                },
+              ]}
+            >
+              Percentage (%)
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.discountTypeButton,
+              {
+                backgroundColor:
+                  discountType === "FIXED" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => setDiscountType("FIXED")}
+          >
+            <RNText
+              style={[
+                styles.discountTypeText,
+                {
+                  color: discountType === "FIXED" ? "#fff" : theme.text,
+                },
+              ]}
+            >
+              Fixed Amount (₹)
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.discountTypeButton,
+              {
+                backgroundColor:
+                  discountType === "CUSTOM_ITEMS" ? theme.primary : theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => setDiscountType("CUSTOM_ITEMS")}
+          >
+            <RNText
+              style={[
+                styles.discountTypeText,
+                {
+                  color: discountType === "CUSTOM_ITEMS" ? "#fff" : theme.text,
+                },
+              ]}
+            >
+              Custom Items
+            </RNText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {discountType === "CUSTOM_ITEMS" ? (
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: theme.text }]}>
+            Selected Menu Items *
+          </Text>
+          {menuItemOptions.length === 0 ? (
+            <View style={[styles.selectItemsButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <RNText style={{ color: theme.textSecondary, textAlign: "center" }}>
+                No menu items available. Add items to the menu first.
+              </RNText>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.selectItemsButton,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+              onPress={() => setShowMenuPicker(true)}
+            >
+              <RNText style={{ color: customItems.length > 0 ? theme.primary : theme.text, fontWeight: customItems.length > 0 ? "600" : "400" }}>
+                {customItems.length > 0
+                  ? `✓ ${customItems.length} item${customItems.length !== 1 ? "s" : ""} selected — tap to change`
+                  : `Tap to select from ${menuItemOptions.length} menu items`}
+              </RNText>
+            </TouchableOpacity>
+          )}
+          {customItems.length > 0 && (
+            <View style={styles.selectedItemsPreview}>
+              {customItems.map((item) => (
+                <View
+                  key={item.item_id}
+                  style={[
+                    styles.selectedItemChip,
+                    { backgroundColor: theme.primary + "20" },
+                  ]}
+                >
+                  <RNText style={{ color: theme.primary, fontSize: 12, fontWeight: "600" }}>
+                    {item.item_name}
+                  </RNText>
+                  <RNText style={{ color: theme.text, fontSize: 11 }}>
+                    {" "}({item.discount_type === "PERCENTAGE" ? `${item.discount_value}% off` : `₹${item.discount_value} off`})
+                  </RNText>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: theme.text }]}>
+            Discount Value {discountType === "PERCENTAGE" ? "(%)" : "(₹)"} *
+          </Text>
+          <Input
+            placeholder={
+              discountType === "PERCENTAGE"
+                ? "Enter percentage (e.g., 20)"
+                : "Enter amount (e.g., 100)"
+            }
+            value={discountValue}
+            onChangeText={setDiscountValue}
+            keyboardType="numeric"
+            style={{ backgroundColor: theme.card, color: theme.text }}
+          />
+        </View>
+      )}
+
       <View style={styles.row}>
         <View style={[styles.section, styles.halfWidth]}>
           <Text style={[styles.label, { color: theme.text }]}>
-            Min Order Amount (₹)
+            Min Order (₹)
           </Text>
           <Input
             placeholder="0"
@@ -160,11 +336,13 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
           />
         </View>
         <View style={[styles.section, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>Max Uses</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            Max Discount (₹)
+          </Text>
           <Input
-            placeholder="Unlimited"
-            value={maxUses}
-            onChangeText={setMaxUses}
+            placeholder="Optional"
+            value={maxDiscountAmount}
+            onChangeText={setMaxDiscountAmount}
             keyboardType="numeric"
             style={{ backgroundColor: theme.card, color: theme.text }}
           />
@@ -190,6 +368,17 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
             style={{ backgroundColor: theme.card, color: theme.text }}
           />
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: theme.text }]}>Usage Limit</Text>
+        <Input
+          placeholder="Leave empty for unlimited"
+          value={usageLimit}
+          onChangeText={setUsageLimit}
+          keyboardType="numeric"
+          style={{ backgroundColor: theme.card, color: theme.text }}
+        />
       </View>
 
       <View style={styles.section}>
@@ -232,6 +421,15 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
           }}
         />
       </View>
+
+      {/* Menu Item Picker Modal */}
+      <MenuItemPicker
+        visible={showMenuPicker}
+        onClose={() => setShowMenuPicker(false)}
+        menuItems={menuItemOptions}
+        selectedItems={customItems}
+        onConfirm={(items) => setCustomItems(items)}
+      />
     </ScrollView>
   );
 };
@@ -256,17 +454,40 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 1,
   },
-  radioGroup: {
+  discountTypeContainer: {
     flexDirection: "row",
-    gap: 20,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 8,
   },
-  radioLabel: {
-    fontSize: 14,
+  discountTypeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  discountTypeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  selectItemsButton: {
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  selectedItemsPreview: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  selectedItemChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   switchRow: {
     flexDirection: "row",
@@ -288,3 +509,4 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
 });
+

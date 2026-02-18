@@ -1,10 +1,11 @@
+// Promotions theme colors aligned with the central app's HQ flavor theme
 export const colors = {
   light: {
-    background: "#F8F9FA",
+    background: "#F8FAFC",
     card: "#FFFFFF",
-    text: "#212529",
+    text: "#0F172A",
     textSecondary: "#6C757D",
-    border: "#DEE2E6",
+    border: "#E2E8F0",
     primary: "#7C3AED",
     primaryLight: "#A78BFA",
     secondary: "#E11D48",
@@ -15,13 +16,13 @@ export const colors = {
     gradientEnd: "#7C3AED",
   },
   dark: {
-    background: "#1A1A2E",
-    card: "#16213E",
+    background: "#0A061A",
+    card: "#1E1B3A",
     text: "#FFFFFF",
     textSecondary: "#A0AEC0",
-    border: "#2D3748",
+    border: "#4C1D95",
     primary: "#8B5CF6",
-    primaryLight: "#A78BFA",
+    primaryLight: "#C4B5FD",
     secondary: "#F43F5E",
     success: "#34D399",
     warning: "#FBBF24",

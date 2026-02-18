@@ -3,6 +3,7 @@ import authReducer from "./authSlice";
 import cartReducer from "./cartSlice";
 import flavorReducer from "./flavorSlice";
 import menuReducer from "./menuSlice";
+import promotionsReducer from "./promotions/promotionsSlice";
 import stockReducer from "./stockSlice";
 import themeReducer from "./themeSlice";
 
@@ -14,6 +15,7 @@ export const store = configureStore({
     menu: menuReducer,
     stock: stockReducer,
     flavor: flavorReducer,
+    promotions: promotionsReducer,
   },
 });
 

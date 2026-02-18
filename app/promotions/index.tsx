@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Animated, Modal, StatusBar, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Alert, Modal, StatusBar, TouchableOpacity, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Button } from "../../components/promotions/atoms/Button";
 import { Input } from "../../components/promotions/atoms/Input";
@@ -16,22 +16,13 @@ type ValidationStatus = "IDLE" | "LOADING" | "ENABLED" | "DISABLED" | "INVALID";
 // Inner component that uses the theme
 function PromotionsScreenContent() {
   const router = useRouter();
-  const { toggleTheme, isDark, theme } = useTheme();
-  const themeIconAnim = useRef(new Animated.Value(isDark ? 1 : 0)).current;
+  const { isDark, theme } = useTheme();
 
   // Validation modal state
   const [showValidateModal, setShowValidateModal] = useState(false);
   const [validateCode, setValidateCode] = useState("");
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>("IDLE");
   const [validating, setValidating] = useState(false);
-
-  useEffect(() => {
-    Animated.timing(themeIconAnim, {
-      toValue: isDark ? 1 : 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }, [isDark, themeIconAnim]);
 
   const handleEditPromotion = useCallback((promotion: Promotion) => {
     router.push({ pathname: "/promotions/create", params: { promotion: JSON.stringify(promotion) } });
@@ -49,7 +40,10 @@ function PromotionsScreenContent() {
     try {
       await api.post("/promotions/validate", {
         promo_code: validateCode.trim().toUpperCase(),
-        order_amount: 100,
+        // Use a large order amount so min_order_amount checks don't block validation
+        order_amount: 999999,
+        // check_only: don't increment usage count when just checking validity
+        check_only: true,
       });
       
       // If no error was thrown, validation was successful
@@ -66,10 +60,11 @@ function PromotionsScreenContent() {
       } else if (
         message &&
         typeof message === "string" &&
-        (message.toLowerCase().includes("inactive") || 
-         message.toLowerCase().includes("expired") || 
-         message.toLowerCase().includes("not started") || 
-         message.toLowerCase().includes("usage limit"))
+        (message.toLowerCase().includes("inactive") ||
+         message.toLowerCase().includes("expired") ||
+         message.toLowerCase().includes("not started") ||
+         message.toLowerCase().includes("usage limit") ||
+         message.toLowerCase().includes("minimum order"))
       ) {
         setValidationStatus("DISABLED");
       } else {
@@ -102,55 +97,6 @@ function PromotionsScreenContent() {
             <Text style={appStyles.homeScreen.headerTitle}>Promotions</Text>
             <Text style={appStyles.homeScreen.headerSubtitle}>Manage your discount codes</Text>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={toggleTheme}
-            style={[appStyles.homeScreen.themeButton, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]}
-            accessibilityRole="button"
-            accessibilityLabel="Toggle theme"
-          >
-            <View style={appStyles.homeScreen.themeButtonIconStack}>
-              <Animated.Text
-                style={[
-                  appStyles.homeScreen.themeButtonIcon,
-                  {
-                    opacity: themeIconAnim,
-                    transform: [
-                      {
-                        scale: themeIconAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.9, 1],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                ☀︎
-              </Animated.Text>
-              <Animated.Text
-                style={[
-                  appStyles.homeScreen.themeButtonIcon,
-                  {
-                    opacity: themeIconAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 0],
-                    }),
-                    transform: [
-                      {
-                        scale: themeIconAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 0.9],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                ☾
-              </Animated.Text>
-            </View>
-          </TouchableOpacity>
         </View>
       </LinearGradient>
 

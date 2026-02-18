@@ -4,18 +4,44 @@ import { Alert, SafeAreaView, ScrollView, StatusBar, TouchableOpacity, View } fr
 import LinearGradient from "react-native-linear-gradient";
 import { Text } from "../../components/promotions/atoms/Text";
 import { PromotionForm } from "../../components/promotions/organisms/PromotionForm";
-import { Promotion } from "../../store/promotions/promotionsSlice";
+import { CustomItemDiscount, Promotion } from "../../store/promotions/promotionsSlice";
 import { ThemeProvider, useTheme } from "../../theme/promotions/ThemeProvider";
 import { appStyles } from "../../theme/promotions/styles";
 import { api } from "../../utils/promotions/api";
+
+// Transform Promotion to form initial data format
+const transformPromotionToFormData = (promotion?: Promotion) => {
+  if (!promotion) return undefined;
+  
+  return {
+    id: promotion.id,
+    promo_code: promotion.promo_code,
+    title: promotion.title,
+    type: promotion.type,
+    value: promotion.value,
+    min_order_amount: promotion.min_order_amount,
+    max_discount_amount: promotion.max_discount_amount ?? undefined,
+    usage_limit: promotion.usage_limit ?? null,
+    start_date: promotion.start_at.split(' ')[0], // Extract date part
+    end_date: promotion.end_at.split(' ')[0],
+    is_active: promotion.status === 'ACTIVE',
+    description: promotion.description || undefined,
+    custom_items: promotion.custom_items as CustomItemDiscount[] | undefined,
+  };
+};
 
 // Inner component that uses the theme
 function CreatePromotionContent() {
   const { isDark, theme } = useTheme();
   const params = useGlobalSearchParams();
-  const editingPromotion = params.promotion ? JSON.parse(params.promotion as string) as Promotion : undefined;
+  const editingPromotion = params.promotion 
+    ? JSON.parse(params.promotion as string) as Promotion 
+    : undefined;
   const isEditing = !!editingPromotion;
   const [isLoading, setIsLoading] = useState(false);
+
+  // Transform the promotion data for the form
+  const formInitialData = transformPromotionToFormData(editingPromotion);
 
   const handleSubmit = useCallback(async (data: any) => {
     setIsLoading(true);
@@ -26,9 +52,15 @@ function CreatePromotionContent() {
         await api.post("/promotions", data);
       }
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving promotion:", error);
-      Alert.alert("Error", "Failed to save promotion");
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
+      if (status === 409 && message) {
+        Alert.alert("Duplicate Promo Code", message);
+      } else {
+        Alert.alert("Error", "Failed to save promotion. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +102,7 @@ function CreatePromotionContent() {
         showsVerticalScrollIndicator={false}
       >
         <PromotionForm 
-          initialData={editingPromotion}
+          initialData={formInitialData}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isLoading={isLoading}
