@@ -1038,6 +1038,22 @@ const appStylesRaw = {
       fontSize: 22,
       fontWeight: "800",
     },
+    originalPrice: {
+      color: "#FFF",
+      fontSize: 14,
+      textDecorationLine: "line-through",
+      opacity: 0.7,
+    },
+    totalRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    discountText: {
+      color: "#4ade80",
+      fontSize: 12,
+      fontWeight: "600",
+    },
     checkoutText: {
       color: "#FFF",
       fontSize: 18,
@@ -1052,6 +1068,212 @@ const appStylesRaw = {
       fontSize: 20,
       fontWeight: "700",
       marginBottom: 20,
+    },
+  },
+
+  // --- Coupon (for Cart page) ---
+  coupon: {
+    section: {
+      position: 'absolute',
+      bottom: 100,
+      left: 16,
+      right: 16,
+      borderRadius: 16,
+      padding: 16,
+      elevation: 8,
+      zIndex: 10,
+    },
+    container: {
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: 1,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    input: {
+      flex: 1,
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 2,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    applyButton: {
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      minWidth: 80,
+    },
+    applyButtonText: {
+      color: '#FFF',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    viewCouponsLink: {
+      marginTop: 12,
+      alignItems: 'center',
+    },
+    viewCouponsText: {
+      fontSize: 14,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+    appliedContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: 2,
+    },
+    appliedInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    appliedCode: {
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    appliedDiscount: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    removeButton: {
+      padding: 8,
+    },
+    removeText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    errorText: {
+      fontSize: 12,
+      marginTop: 8,
+      fontWeight: '600',
+    },
+    card: {
+      borderWidth: 2,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 12,
+    },
+    cardBlurred: {
+      opacity: 0.6,
+    },
+    cardContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    cardLeft: {
+      flex: 1,
+    },
+    cardCode: {
+      fontSize: 16,
+      fontWeight: '800',
+      marginBottom: 4,
+    },
+    cardTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    cardDiscount: {
+      fontSize: 14,
+      fontWeight: '700',
+      marginBottom: 2,
+    },
+    cardExpiry: {
+      fontSize: 11,
+      marginTop: 4,
+    },
+    cardMinOrder: {
+      fontSize: 11,
+      marginTop: 2,
+    },
+    cardRight: {
+      marginLeft: 12,
+    },
+    applicableBadge: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    applicableBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#FFF',
+    },
+    lockedBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    lockedBadgeText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    unavailableReason: {
+      fontSize: 11,
+      marginTop: 8,
+      fontStyle: 'italic',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      width: '100%',
+      maxHeight: '70%',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    closeButton: {
+      fontSize: 24,
+      fontWeight: '700',
+      padding: 4,
+    },
+    closeButtonText: {
+      fontSize: 24,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+    },
+    couponsList: {
+      paddingBottom: 20,
+    },
+    modalFooter: {
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: '#E0E0E0',
+    },
+    footerNote: {
+      fontSize: 12,
+      textAlign: 'center',
     },
   },
 
