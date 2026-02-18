@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
   useColorScheme
 } from "react-native";
@@ -465,68 +464,6 @@ export default function CheckoutPage() {
         </Pressable>
         <Text style={appStyles.cart.totalAmount}>₹{grandTotal.toFixed(2)}</Text>
       </LinearGradient>
-
-      {/* Coupon Code Section */}
-      <View style={[appStyles.coupons.couponSection, { backgroundColor: theme.card[0] }]}>
-        <Text style={[appStyles.coupons.couponSectionTitle, { color: theme.text }]}>
-          Have a coupon code?
-        </Text>
-        
-        {appliedPromotion ? (
-          <View style={appStyles.coupons.appliedCouponContainer}>
-            <View style={[appStyles.coupons.appliedCoupon, { borderColor: theme.primary }]}>
-              <Text style={[appStyles.coupons.appliedCouponCode, { color: theme.primary }]}>
-                {appliedPromotion.promo_code}
-              </Text>
-              <Text style={[appStyles.coupons.appliedCouponDiscount, { color: '#22C55E' }]}>
-                -₹{discount.toFixed(2)}
-              </Text>
-            </View>
-            <Pressable onPress={handleRemoveCoupon}>
-              <Text style={[appStyles.coupons.removeCoupon, { color: '#EF4444' }]}>
-                Remove
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View style={appStyles.coupons.inputContainer}>
-            <TextInput
-              style={[appStyles.coupons.couponInput, { 
-                borderColor: couponError ? '#EF4444' : theme.primary,
-                backgroundColor: theme.background,
-                color: theme.text
-              }]}
-              placeholder="Enter coupon code"
-              placeholderTextColor="#999"
-              value={couponCode}
-              onChangeText={setCouponCode}
-              autoCapitalize="characters"
-            />
-            <Pressable
-              onPress={handleApplyCoupon}
-              style={[appStyles.coupons.applyButton, { backgroundColor: theme.primary }]}
-              disabled={isApplying}
-            >
-              <Text style={appStyles.coupons.applyButtonText}>
-                {isApplying ? '...' : 'Apply'}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-        
-        {couponError ? (
-          <Text style={appStyles.coupons.errorText}>{couponError}</Text>
-        ) : null}
-        
-        <Pressable
-          onPress={() => setShowCouponsModal(true)}
-          style={appStyles.coupons.viewCouponsButton}
-        >
-          <Text style={[appStyles.coupons.viewCouponsText, { color: theme.primary }]}>
-            View Available Coupons →
-          </Text>
-        </Pressable>
-      </View>
 
       {/* Order Summary */}
       <FlatList

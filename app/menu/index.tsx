@@ -38,6 +38,7 @@ import { CartButton } from "../../components/menu/CartButton";
 import { MenuHeader } from "../../components/menu/MenuHeader";
 import { SeasonalBanner } from "../../components/menu/SeasonalBanner";
 import { MenuItemCard } from "../../components/MenuItemCard";
+import { BestOfferAlert } from "../../components/promotions/BestOfferAlert";
 import { ActionButton, ModalButtons } from "../../components/ui";
 
 
@@ -289,6 +290,9 @@ export default function MenuPage() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SeasonalBanner currentSeasonalMenu={currentSeasonalMenu} seasonalMenuManager={seasonalMenuManager} />
+      
+      {/* Best Offer Alert - Only shows for user flavor */}
+      <BestOfferAlert theme={theme} />
 
       {categories.length > 0 && (
         <CategoryFilter 

@@ -343,7 +343,7 @@ const CouponsModal = ({
   );
 };
 
-// Bill Modal Component - Physical white bill design
+// Bill Modal Component - Full page bill design
 const BillModal = ({
   visible,
   onClose,
@@ -355,6 +355,13 @@ const BillModal = ({
   appliedCoupon,
   theme,
   onCheckout,
+  couponCode,
+  setCouponCode,
+  onApplyCoupon,
+  onRemoveCoupon,
+  onViewCoupons,
+  couponError,
+  applyingCoupon,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -366,90 +373,133 @@ const BillModal = ({
   appliedCoupon: string | null;
   theme: any;
   onCheckout: () => void;
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    transparent={true}
-    onRequestClose={onClose}
-  >
-    <View style={appStyles.bill.modalOverlay}>
-      <View style={[appStyles.bill.modalContent, { backgroundColor: '#FFFFFF' }]}>
-        {/* Bill Header */}
-        <View style={appStyles.bill.header}>
-          <Text style={appStyles.bill.restaurantName}>Restaurant</Text>
-          <Text style={appStyles.bill.billTitle}>BILL</Text>
-          <View style={appStyles.bill.divider} />
-        </View>
+  couponCode?: string;
+  setCouponCode?: (code: string) => void;
+  onApplyCoupon?: () => void;
+  onRemoveCoupon?: () => void;
+  onViewCoupons?: () => void;
+  couponError?: string;
+  applyingCoupon?: boolean;
+}) => {
+  if (!visible) return null;
+  
+  return (
+    <View style={[appStyles.bill.fullPage, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={appStyles.bill.fullPageHeader}>
+        <Pressable onPress={onClose} style={appStyles.bill.backButton}>
+          <Text style={[appStyles.bill.backButtonText, { color: theme.primary }]}>← Back</Text>
+        </Pressable>
+        <View style={{ width: 60 }} />
+      </View>
 
-        {/* Cart Items */}
-        <ScrollView style={appStyles.bill.itemsContainer}>
-          {items.map((item) => (
-            <View key={item.id} style={appStyles.bill.itemRow}>
-              <View style={appStyles.bill.itemInfo}>
-                <Text style={appStyles.bill.itemName}>{item.name}</Text>
-                <Text style={appStyles.bill.itemQuantity}>
-                  {item.quantity} × ₹{item.price}
-                </Text>
-              </View>
-              <Text style={appStyles.bill.itemTotal}>
-                ₹{(item.price * item.quantity).toFixed(2)}
+      {/* Cart Items */}
+      <ScrollView style={appStyles.bill.fullPageItems}>
+        {items.map((item) => (
+          <View key={item.id} style={[appStyles.bill.fullPageItemRow, { borderBottomColor: theme.border }]}>
+            <View style={appStyles.bill.itemInfo}>
+              <Text style={[appStyles.bill.itemName, { color: theme.text }]}>{item.name}</Text>
+              <Text style={[appStyles.bill.itemQuantity, { color: theme.muted }]}>
+                {item.quantity} × ₹{item.price}
               </Text>
             </View>
-          ))}
-        </ScrollView>
-
-        {/* Bill Summary */}
-        <View style={appStyles.bill.summaryContainer}>
-          <View style={appStyles.bill.divider} />
-          
-          <View style={appStyles.bill.summaryRow}>
-            <Text style={appStyles.bill.summaryLabel}>Subtotal</Text>
-            <Text style={appStyles.bill.summaryValue}>₹{subtotal.toFixed(2)}</Text>
-          </View>
-          
-          {discount > 0 && (
-            <View style={appStyles.bill.summaryRow}>
-              <Text style={[appStyles.bill.summaryLabel, { color: '#22c55e' }]}>Discount ({appliedCoupon})</Text>
-              <Text style={[appStyles.bill.summaryValue, { color: '#22c55e' }]}>-₹{discount.toFixed(2)}</Text>
-            </View>
-          )}
-          
-          <View style={appStyles.bill.summaryRow}>
-            <Text style={appStyles.bill.summaryLabel}>Tax (5%)</Text>
-            <Text style={appStyles.bill.summaryValue}>₹{tax.toFixed(2)}</Text>
-          </View>
-          
-          <View style={appStyles.bill.divider} />
-          
-          <View style={appStyles.bill.totalRow}>
-            <Text style={appStyles.bill.totalLabel}>TOTAL</Text>
-            <Text style={appStyles.bill.totalValue}>₹{total.toFixed(2)}</Text>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={appStyles.bill.buttonContainer}>
-          <Pressable
-            onPress={onClose}
-            style={[appStyles.bill.secondaryButton, { borderColor: theme.primary }]}
-          >
-            <Text style={[appStyles.bill.secondaryButtonText, { color: theme.primary }]}>
-              Close
+            <Text style={[appStyles.bill.itemTotal, { color: theme.text }]}>
+              ₹{(item.price * item.quantity).toFixed(2)}
             </Text>
-          </Pressable>
-          
-          <Pressable
-            onPress={onCheckout}
-            style={[appStyles.bill.primaryButton, { backgroundColor: theme.primary }]}
-          >
-            <Text style={appStyles.bill.primaryButtonText}>Checkout</Text>
-          </Pressable>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Coupon Section */}
+      {appliedCoupon ? (
+        <View style={[appStyles.bill.couponAppliedContainer, { borderColor: theme.success, backgroundColor: theme.card[0] }]}>
+          <View style={appStyles.bill.couponAppliedInfo}>
+            <Text style={[appStyles.bill.couponAppliedCode, { color: theme.success }]}>
+              ✓ {appliedCoupon} applied
+            </Text>
+            <Text style={[appStyles.bill.couponAppliedDiscount, { color: theme.success }]}>
+              -₹{discount.toFixed(2)}
+            </Text>
+          </View>
+          {onRemoveCoupon && (
+            <Pressable onPress={onRemoveCoupon} style={appStyles.bill.couponRemoveButton}>
+              <Text style={[appStyles.bill.couponRemoveText, { color: theme.error }]}>Remove</Text>
+            </Pressable>
+          )}
+        </View>
+      ) : (
+        <View style={[appStyles.bill.couponSection, { backgroundColor: theme.card[0] }]}>
+          <View style={appStyles.bill.couponInputRow}>
+            <TextInput
+              style={[appStyles.bill.couponInput, { borderColor: theme.primary, backgroundColor: theme.background, color: theme.text }]}
+              placeholder="Enter coupon code"
+              placeholderTextColor={theme.muted}
+              value={couponCode}
+              onChangeText={setCouponCode}
+              autoCapitalize="characters"
+            />
+            <Pressable
+              onPress={onApplyCoupon}
+              disabled={applyingCoupon || !couponCode?.trim()}
+              style={[appStyles.bill.couponApplyButton, { backgroundColor: theme.primary }]}
+            >
+              <Text style={appStyles.bill.couponApplyButtonText}>
+                {applyingCoupon ? '...' : 'Apply'}
+              </Text>
+            </Pressable>
+          </View>
+          {couponError && (
+            <Text style={[appStyles.bill.couponErrorText, { color: theme.error }]}>
+              {couponError}
+            </Text>
+          )}
+          {onViewCoupons && (
+            <Pressable onPress={onViewCoupons} style={appStyles.bill.viewCouponsLink}>
+              <Text style={[appStyles.bill.viewCouponsText, { color: theme.primary }]}>
+                View Available Coupons
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
+      {/* Bill Summary */}
+      <View style={[appStyles.bill.fullPageSummary, { backgroundColor: theme.card[0] }]}>
+        <View style={appStyles.bill.summaryRow}>
+          <Text style={[appStyles.bill.summaryLabel, { color: theme.text }]}>Subtotal</Text>
+          <Text style={[appStyles.bill.summaryValue, { color: theme.text }]}>₹{subtotal.toFixed(2)}</Text>
+        </View>
+        
+        {discount > 0 && (
+          <View style={appStyles.bill.summaryRow}>
+            <Text style={[appStyles.bill.summaryLabel, { color: '#22c55e' }]}>Discount ({appliedCoupon})</Text>
+            <Text style={[appStyles.bill.summaryValue, { color: '#22c55e' }]}>-₹{discount.toFixed(2)}</Text>
+          </View>
+        )}
+        
+        <View style={appStyles.bill.summaryRow}>
+          <Text style={[appStyles.bill.summaryLabel, { color: theme.text }]}>Tax (5%)</Text>
+          <Text style={[appStyles.bill.summaryValue, { color: theme.text }]}>₹{tax.toFixed(2)}</Text>
+        </View>
+        
+        <View style={[appStyles.bill.totalRow, { borderTopColor: theme.border }]}>
+          <Text style={[appStyles.bill.totalLabel, { color: theme.text }]}>TOTAL</Text>
+          <Text style={[appStyles.bill.totalValue, { color: theme.primary }]}>₹{total.toFixed(2)}</Text>
         </View>
       </View>
+
+      {/* Checkout Button */}
+      <View style={appStyles.bill.checkoutButtonContainer}>
+        <Pressable
+          onPress={onCheckout}
+          style={[appStyles.bill.checkoutButton, { backgroundColor: theme.primary }]}
+        >
+          <Text style={appStyles.bill.checkoutButtonText}>Place Order</Text>
+        </Pressable>
+      </View>
     </View>
-  </Modal>
-);
+  );
+};
 
 export default function CartPage() {
   const { safePush } = useSafeNavigation(300);
@@ -598,10 +648,10 @@ export default function CartPage() {
   }, []);
 
   const handleCheckout = useCallback(() => {
-    setShowBill(false);
-    // Navigate to checkout page with coupon info
-    router.push("/checkout");
-  }, []);
+    // Navigate to order success
+    dispatch(clearCart());
+    router.replace('/order-success');
+  }, [dispatch]);
 
   if (items.length === 0) {
     return (
@@ -636,86 +686,72 @@ export default function CartPage() {
 
   return (
     <View style={[appStyles.cart.container, { backgroundColor: theme.background }]}>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
-        renderItem={({ item }) => (
-          <CartItemComponent
-            item={item}
-            theme={theme}
-            onAdd={() => handleAddItem(item)}
-            onRemove={() => handleRemoveItem(item.id)}
+      {showBill ? (
+        <BillModal
+          visible={true}
+          onClose={handleCloseBill}
+          items={items}
+          subtotal={total}
+          tax={tax}
+          total={grandTotal}
+          discount={discount}
+          appliedCoupon={appliedCoupon}
+          theme={theme}
+          onCheckout={handleCheckout}
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
+          onApplyCoupon={() => handleApplyCoupon()}
+          onRemoveCoupon={handleRemoveCoupon}
+          onViewCoupons={() => setShowCouponsModal(true)}
+          couponError={couponError || undefined}
+          applyingCoupon={applyingCoupon}
+        />
+      ) : (
+        <>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
+            renderItem={({ item }) => (
+              <CartItemComponent
+                item={item}
+                theme={theme}
+                onAdd={() => handleAddItem(item)}
+                onRemove={() => handleRemoveItem(item.id)}
+              />
+            )}
           />
-        )}
-      />
 
-      {/* Coupon Section */}
-      <View style={[appStyles.coupon.section, { backgroundColor: theme.background }]}>
-        {appliedCoupon ? (
-          <AppliedCoupon
-            couponCode={appliedCoupon}
-            discount={discount}
-            onRemove={handleRemoveCoupon}
-            theme={theme}
-          />
-        ) : (
-          <>
-            <CouponInput
-              couponCode={couponCode}
-              setCouponCode={setCouponCode}
-              onApply={() => handleApplyCoupon()}
-              onViewCoupons={() => setShowCouponsModal(true)}
-              applying={applyingCoupon}
-              theme={theme}
-            />
-            {couponError && (
-              <Text style={[appStyles.coupon.errorText, { color: theme.error || '#ef4444' }]}>
-                {couponError}
+          {/* CHECKOUT BAR */}
+          <LinearGradient
+            colors={[theme.primary, theme.accent]}
+            style={appStyles.cart.checkoutBar}
+          >
+            <View>
+              <Text style={appStyles.cart.totalLabel}>Total</Text>
+              <Text style={appStyles.cart.totalAmount}>
+                ₹{total.toFixed(2)}
               </Text>
-            )}
-          </>
-        )}
-      </View>
+            </View>
 
-      {/* CHECKOUT BAR */}
-      <LinearGradient
-        colors={[theme.primary, theme.accent]}
-        style={appStyles.cart.checkoutBar}
-      >
-        <View>
-          <Text style={appStyles.cart.totalLabel}>Total</Text>
-          <View style={appStyles.cart.totalRow}>
-            {discount > 0 && (
-              <Text style={appStyles.cart.originalPrice}>₹{total}</Text>
-            )}
-            <Text style={appStyles.cart.totalAmount}>
-              ₹{grandTotal.toFixed(2)}
-            </Text>
-          </View>
-          {discount > 0 && (
-            <Text style={appStyles.cart.discountText}>
-              You save ₹{discount.toFixed(2)}
-            </Text>
-          )}
-        </View>
-
-        <View style={{ alignItems: "flex-end" }}>
-          <Pressable
-            onPress={handleToggleTheme}
-            style={{ marginBottom: 8 }}
-          >
-            <Text style={{ color: "#FFF", opacity: 0.7, fontSize: 12 }}>
-              Toggle {resolvedMode === "dark" ? "Light" : "Dark"}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleProceedToPayment}
-          >
-            <Text style={appStyles.cart.checkoutText}>Proceed to Payment →</Text>
-          </Pressable>
-        </View>
-      </LinearGradient>
+            <View style={{ alignItems: "flex-end" }}>
+              <Pressable
+                onPress={handleToggleTheme}
+                style={{ marginBottom: 8 }}
+              >
+                <Text style={{ color: "#FFF", opacity: 0.7, fontSize: 12 }}>
+                  Toggle {resolvedMode === "dark" ? "Light" : "Dark"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleProceedToPayment}
+              >
+                <Text style={appStyles.cart.checkoutText}>Bill Now</Text>
+              </Pressable>
+            </View>
+          </LinearGradient>
+        </>
+      )}
 
       {/* Coupons Modal */}
       <CouponsModal
@@ -727,20 +763,6 @@ export default function CartPage() {
         onApplyCoupon={handleApplyCouponFromModal}
         loading={loadingPromotions}
         theme={theme}
-      />
-
-      {/* Bill Modal */}
-      <BillModal
-        visible={showBill}
-        onClose={handleCloseBill}
-        items={items}
-        subtotal={total}
-        tax={tax}
-        total={grandTotal}
-        discount={discount}
-        appliedCoupon={appliedCoupon}
-        theme={theme}
-        onCheckout={handleCheckout}
       />
     </View>
   );

@@ -9,7 +9,7 @@ import { IconButton } from "../ui";
 
 interface MenuHeaderProps {
   currentSeasonalMenu: SeasonalMenu | null;
-  user: { address?: string } | null;
+  user: { firstName?: string; lastName?: string; address?: string } | null;
   isLoggedIn: boolean;
   theme: {
     text: string;
@@ -59,7 +59,9 @@ export function MenuHeader({
           )}
           <Text style={[styles.headerSubtitle, { color: withOpacity(theme.text, 0.5) }]}>
             {isLoggedIn
-              ? `Welcome, ${isHQUser ? "HQ Admin" : isBranchUser ? "Branch Admin" : "Customer"}!`
+              ? user?.firstName 
+                ? `Hello ${user.firstName}!` 
+                : `Welcome, ${isHQUser ? "HQ Admin" : isBranchUser ? "Branch Admin" : "Customer"}!`
               : "Please sign in to order"}
           </Text>
         </View>

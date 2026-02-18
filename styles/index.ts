@@ -1279,6 +1279,63 @@ const appStylesRaw = {
 
   // --- Bill Modal ---
   bill: {
+    fullPage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 100,
+    },
+    fullPageHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 50,
+      paddingBottom: 16,
+    },
+    backButton: {
+      padding: 8,
+    },
+    backButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    fullPageTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    fullPageItems: {
+      flex: 1,
+      paddingHorizontal: 16,
+    },
+    fullPageItemRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+    },
+    fullPageSummary: {
+      padding: 16,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+    },
+    checkoutButtonContainer: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+    checkoutButton: {
+      paddingVertical: 16,
+      borderRadius: 16,
+      alignItems: 'center',
+    },
+    checkoutButtonText: {
+      color: '#FFF',
+      fontSize: 18,
+      fontWeight: '800',
+    },
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1321,6 +1378,81 @@ const appStylesRaw = {
     itemsContainer: {
       maxHeight: 200,
       marginBottom: 12,
+    },
+    // Coupon styles for Bill Modal
+    couponSection: {
+      marginBottom: 12,
+      padding: 12,
+      backgroundColor: '#F9F9F9',
+      borderRadius: 12,
+    },
+    couponInputRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    couponInput: {
+      flex: 1,
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 2,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      fontWeight: '600',
+      backgroundColor: '#FFF',
+    },
+    couponApplyButton: {
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    couponApplyButtonText: {
+      color: '#FFF',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    couponErrorText: {
+      fontSize: 12,
+      marginTop: 8,
+      fontWeight: '600',
+    },
+    viewCouponsLink: {
+      marginTop: 10,
+      alignItems: 'center',
+    },
+    viewCouponsText: {
+      fontSize: 14,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+    couponAppliedContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: 2,
+      marginBottom: 12,
+    },
+    couponAppliedInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    couponAppliedCode: {
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    couponAppliedDiscount: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    couponRemoveButton: {
+      padding: 8,
+    },
+    couponRemoveText: {
+      fontSize: 14,
+      fontWeight: '600',
     },
     itemRow: {
       flexDirection: 'row',
