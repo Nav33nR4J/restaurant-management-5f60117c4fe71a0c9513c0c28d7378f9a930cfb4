@@ -7,10 +7,11 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   useColorScheme,
-  View
+  View,
 } from "react-native";
 
 import { ActionButton, QuantityControl } from "../components/ui";
@@ -764,6 +765,103 @@ export default function CartPage() {
         loading={loadingPromotions}
         theme={theme}
       />
+
+      {/* Small Alert - Buy for more X to unlock discount */}
+      {total > 0 && total < 100 && (
+        <SmallUnlockAlert total={total} />
+      )}
     </View>
   );
 }
+
+// Small Unlock Alert Component
+function SmallUnlockAlert({ total }: { total: number }) {
+  const [visible, setVisible] = useState(true);
+
+  const amountNeeded = 100 - total;
+
+  if (!visible || total >= 100) return null;
+
+  return (
+    <View style={smallAlertStyles.container}>
+      <View style={smallAlertStyles.content}>
+        <Text style={smallAlertStyles.icon}>🎁</Text>
+        <View style={smallAlertStyles.textContainer}>
+          <Text style={smallAlertStyles.title}>Unlock Discount!</Text>
+          <Text style={smallAlertStyles.message}>
+            Buy for <Text style={smallAlertStyles.highlight}>₹{amountNeeded}</Text> more to get 10% OFF
+          </Text>
+        </View>
+        <Pressable onPress={() => setVisible(false)} style={smallAlertStyles.closeBtn}>
+          <Text style={smallAlertStyles.closeText}>✕</Text>
+        </Pressable>
+      </View>
+      <View style={smallAlertStyles.progressContainer}>
+        <View style={[smallAlertStyles.progressBar, { width: `${(total / 100) * 100}%` }]} />
+      </View>
+    </View>
+  );
+}
+
+const smallAlertStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 100,
+    left: 16,
+    right: 16,
+    backgroundColor: '#4CAF50',
+    borderRadius: 16,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: 20,
+  },
+  textContainer: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  title: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  message: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  highlight: {
+    color: '#FFD700',
+    fontWeight: '800',
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  closeText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  progressContainer: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#FFD700',
+    borderRadius: 2,
+  },
+});

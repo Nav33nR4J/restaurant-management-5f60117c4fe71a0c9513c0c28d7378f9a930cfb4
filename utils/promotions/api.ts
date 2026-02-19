@@ -12,7 +12,7 @@ const getApiBaseUrl = (): string => {
   
   // Default to Android emulator's special IP for localhost
   // This allows the Android emulator to connect to the host machine's backend
-  return "http://10.0.2.2:5000/api";
+  return "http://10.0.2.2:5000/api/v1";
 };
 
 const API_BASE_URL = getApiBaseUrl();

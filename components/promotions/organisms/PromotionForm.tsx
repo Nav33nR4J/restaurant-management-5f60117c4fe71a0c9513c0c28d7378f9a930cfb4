@@ -21,8 +21,8 @@ interface PromotionFormProps {
     id?: string;
     promo_code: string;
     title: string;
-    type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
-    value: number;
+    discount_type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+    discount_value: number;
     min_order_amount: number;
     max_discount_amount?: number;
     usage_limit?: number | null;
@@ -69,10 +69,10 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
   const [promoCode, setPromoCode] = useState(initialData?.promo_code || "");
   const [title, setTitle] = useState(initialData?.title || "");
   const [discountType, setDiscountType] = useState<"PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS">(
-    initialData?.type || "PERCENTAGE"
+    initialData?.discount_type || "PERCENTAGE"
   );
   const [discountValue, setDiscountValue] = useState(
-    initialData?.value?.toString() || ""
+    initialData?.discount_value?.toString() || ""
   );
   const [minOrderAmount, setMinOrderAmount] = useState(
     initialData?.min_order_amount?.toString() || "0"
@@ -140,8 +140,8 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
       id: initialData?.id,
       promo_code: promoCode.toUpperCase().trim(),
       title: title.trim(),
-      type: discountType,
-      value: discountType === "CUSTOM_ITEMS" ? 0 : parseFloat(discountValue),
+      discount_type: discountType,
+      discount_value: discountType === "CUSTOM_ITEMS" ? 0 : parseFloat(discountValue),
       min_order_amount: minOrderAmount ? parseFloat(minOrderAmount) : 0,
       max_discount_amount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
       usage_limit: usageLimit ? parseInt(usageLimit) : null,

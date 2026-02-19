@@ -157,7 +157,7 @@ const CouponsModal = ({
     if (promotion.status !== 'ACTIVE') return false;
     
     // If it's a CUSTOM_ITEMS promotion, check if any cart item is in custom_items
-    if (promotion.type === 'CUSTOM_ITEMS' && promotion.custom_items) {
+    if (promotion.discount_type === 'CUSTOM_ITEMS' && promotion.custom_items) {
       const cartItemIds = cartItems.map(item => item.id);
       return promotion.custom_items.some((item: CustomItemDiscount) => cartItemIds.includes(item.item_id));
     }
@@ -190,10 +190,10 @@ const CouponsModal = ({
               {item.title}
             </Text>
             <Text style={appStyles.coupons.couponDescription}>
-              {item.type === 'PERCENTAGE' 
-                ? `${item.value}% OFF` 
-                : item.type === 'FIXED' 
-                  ? `₹${item.value} OFF` 
+              {item.discount_type === 'PERCENTAGE' 
+                ? `${item.discount_value}% OFF` 
+                : item.discount_type === 'FIXED' 
+                  ? `₹${item.discount_value} OFF` 
                   : 'Special Item Discount'}
             </Text>
             {item.min_order_amount > 0 && (
@@ -309,16 +309,16 @@ export default function CheckoutPage() {
   const discount = useMemo(() => {
     if (!appliedPromotion) return 0;
     
-    if (appliedPromotion.type === 'PERCENTAGE') {
-      let discountAmount = subtotal * (appliedPromotion.value / 100);
+    if (appliedPromotion.discount_type === 'PERCENTAGE') {
+      let discountAmount = subtotal * (appliedPromotion.discount_value / 100);
       // Apply max discount cap if set
       if (appliedPromotion.max_discount_amount) {
         discountAmount = Math.min(discountAmount, appliedPromotion.max_discount_amount);
       }
       return discountAmount;
-    } else if (appliedPromotion.type === 'FIXED') {
-      return Math.min(appliedPromotion.value, subtotal);
-    } else if (appliedPromotion.type === 'CUSTOM_ITEMS' && appliedPromotion.custom_items) {
+    } else if (appliedPromotion.discount_type === 'FIXED') {
+      return Math.min(appliedPromotion.discount_value, subtotal);
+    } else if (appliedPromotion.discount_type === 'CUSTOM_ITEMS' && appliedPromotion.custom_items) {
       // Calculate discount only for applicable items
       let discountAmount = 0;
       items.forEach(cartItem => {
@@ -376,7 +376,7 @@ export default function CheckoutPage() {
       }
 
       // Check if promotion is applicable to cart items
-      if (promotion.type === 'CUSTOM_ITEMS' && promotion.custom_items) {
+      if (promotion.discount_type === 'CUSTOM_ITEMS' && promotion.custom_items) {
         const cartItemIds = items.map(item => item.id);
         const hasApplicableItem = promotion.custom_items.some(
           (item: CustomItemDiscount) => cartItemIds.includes(item.item_id)
