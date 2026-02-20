@@ -13,4 +13,10 @@ router.delete('/:id', promotionController.deletePromotion);
 router.patch('/:id/toggle', promotionController.togglePromotionStatus);
 router.post('/validate', promotionController.validatePromotion);
 
+// Saga endpoints
+router.post('/saga', promotionController.createPromotionSaga);
+router.put('/:id/saga', promotionController.updatePromotionSaga);
+router.delete('/:id/saga', promotionController.deletePromotionSaga);
+router.patch('/:id/toggle/saga', promotionController.togglePromotionStatusSaga);
+
 module.exports = router;

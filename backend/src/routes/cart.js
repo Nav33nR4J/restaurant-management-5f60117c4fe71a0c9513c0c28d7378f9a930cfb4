@@ -12,4 +12,10 @@ router.delete('/items/:id', cartController.removeFromCart);
 router.delete('/clear', cartController.clearCart);
 router.post('/apply-promo', cartController.applyPromotion);
 
+// Saga endpoints
+router.post('/items/saga', cartController.addToCartSaga);
+router.put('/items/:id/saga', cartController.updateCartItemSaga);
+router.delete('/items/:id/saga', cartController.removeFromCartSaga);
+router.delete('/clear/saga', cartController.clearCartSaga);
+
 module.exports = router;

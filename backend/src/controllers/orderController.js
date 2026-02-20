@@ -6,6 +6,7 @@ const { generateId } = require('../utils/auth');
 const { WARNINGS } = require('../utils/warnings');
 const { NotFoundError, ValidationError, ForbiddenError } = require('../utils/errors');
 const { successResponse, createdResponse, paginatedResponse } = require('../utils/response');
+const { executeOrderSaga, executeCancelSaga } = require('../services/orderSaga');
 
 const CANCELLABLE_STATUSES = ['pending', 'confirmed'];
 const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
@@ -207,6 +208,50 @@ const createOrder = async (req, res, next) => {
 };
 
 /**
+ * Create Order using Saga Pattern
+ */
+const createOrderSaga = async (req, res, next) => {
+  try {
+    const userId = getUserIdentifier(req);
+    const sessionId = req.session_id || req.ip;
+    const { delivery_address, delivery_phone, notes, promotion_code } = req.body;
+
+    // Validate required fields
+    if (!delivery_address) {
+      throw new ValidationError('Delivery address is required');
+    }
+    if (!delivery_phone) {
+      throw new ValidationError('Delivery phone is required');
+    }
+
+    // Execute the order saga
+    const result = await executeOrderSaga({
+      userId,
+      sessionId,
+      delivery_address,
+      delivery_phone,
+      notes,
+      promotion_code
+    });
+
+    // Return the result from the create_order step
+    const orderData = result.data || result;
+    
+    return createdResponse(res, {
+      order_id: orderData.order_id,
+      subtotal: orderData.subtotal,
+      discount: orderData.discount,
+      total_amount: orderData.total_amount,
+      promotion: orderData.promotion,
+      status: orderData.status,
+      transaction_id: orderData.transaction_id
+    }, 'Order created successfully via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Update Order Status
  */
 const updateOrderStatus = async (req, res, next) => {
@@ -264,6 +309,7 @@ module.exports = {
   getOrders,
   getOrderById,
   createOrder,
+  createOrderSaga,
   updateOrderStatus,
   cancelOrder
 };

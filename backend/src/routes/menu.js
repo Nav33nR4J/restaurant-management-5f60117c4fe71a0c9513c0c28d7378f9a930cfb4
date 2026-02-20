@@ -21,4 +21,11 @@ router.put('/items/:id', menuController.updateMenuItem);
 router.delete('/items/:id', menuController.deleteMenuItem);
 router.put('/items/:id/availability', menuController.toggleAvailability);
 
+// Saga endpoints
+router.post('/categories/saga', menuController.createCategorySaga);
+router.post('/items/saga', menuController.createMenuItemSaga);
+router.put('/items/:id/saga', menuController.updateMenuItemSaga);
+router.delete('/items/:id/saga', menuController.deleteMenuItemSaga);
+router.put('/items/:id/availability/saga', menuController.toggleAvailabilitySaga);
+
 module.exports = router;

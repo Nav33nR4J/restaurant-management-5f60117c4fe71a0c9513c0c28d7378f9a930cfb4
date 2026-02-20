@@ -7,6 +7,7 @@ const { generateId } = require('../utils/auth');
 const { WARNINGS } = require('../utils/warnings');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { successResponse, createdResponse, paginatedResponse } = require('../utils/response');
+const menuSaga = require('../services/menuSaga');
 
 /**
  * Get All Categories
@@ -273,6 +274,90 @@ const toggleAvailability = async (req, res, next) => {
   }
 };
 
+/**
+ * Create Category using Saga
+ */
+const createCategorySaga = async (req, res, next) => {
+  try {
+    const { name, description, image_url, sort_order = 0 } = req.body;
+
+    const result = await menuSaga.createCategory({ name, description, image_url, sort_order });
+    const data = result.data || result;
+
+    return createdResponse(res, { id: data.id, name: data.name }, 'Category created via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create Menu Item using Saga
+ */
+const createMenuItemSaga = async (req, res, next) => {
+  try {
+    const { name, description, price, category_id, image_url, is_vegetarian, is_special, is_seasonal, branch_price } = req.body;
+
+    if (!name || !price) {
+      throw new ValidationError(WARNINGS.GENERAL.BAD_REQUEST('Name and price are required'));
+    }
+
+    const result = await menuSaga.createMenuItem({ name, description, price, category_id, image_url, is_vegetarian, is_special, is_seasonal, branch_price });
+    const data = result.data || result;
+
+    return createdResponse(res, { id: data.id, name: data.name, price: data.price }, 'Menu item created via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update Menu Item using Saga
+ */
+const updateMenuItemSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, category_id, image_url, is_vegetarian, is_special, is_seasonal } = req.body;
+
+    const result = await menuSaga.updateMenuItem({ menu_item_id: id, name, description, price, category_id, image_url, is_vegetarian, is_special, is_seasonal });
+
+    return successResponse(res, { id }, 'Menu item updated via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete Menu Item using Saga
+ */
+const deleteMenuItemSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    await menuSaga.deleteMenuItem({ menu_item_id: id });
+
+    return successResponse(res, null, 'Menu item deleted via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Toggle Availability using Saga
+ */
+const toggleAvailabilitySaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { is_available } = req.body;
+
+    const result = await menuSaga.toggleAvailability({ menu_item_id: id, is_available });
+    const data = result.data || result;
+
+    return successResponse(res, { id: data.id, is_available: data.is_available }, 'Availability toggled via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCategories,
   getMenuItems,
@@ -284,5 +369,11 @@ module.exports = {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
-  toggleAvailability
+  toggleAvailability,
+  // Saga endpoints
+  createCategorySaga,
+  createMenuItemSaga,
+  updateMenuItemSaga,
+  deleteMenuItemSaga,
+  toggleAvailabilitySaga
 };

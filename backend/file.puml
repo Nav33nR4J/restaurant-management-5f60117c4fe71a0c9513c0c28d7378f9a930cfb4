@@ -1,0 +1,218 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+' ==========================
+' USERS
+' ==========================
+entity users {
+  +id : varchar(36) <<PK>>
+  --
+  name : varchar(255)
+  email : varchar(255) <<UNIQUE>>
+  phone : varchar(20)
+  password_hash : varchar(255)
+  role : enum(customer, admin, driver, hq, branch)
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+' ==========================
+' BRANCHES
+' ==========================
+entity branches {
+  +id : varchar(36) <<PK>>
+  --
+  branch_code : varchar(50) <<UNIQUE>>
+  name : varchar(255)
+  address : text
+  phone : varchar(20)
+  is_active : boolean
+  created_at : timestamp
+}
+
+' ==========================
+' CATEGORIES
+' ==========================
+entity categories {
+  +id : varchar(36) <<PK>>
+  --
+  name : varchar(255)
+  description : text
+  image_url : varchar(500)
+  is_active : boolean
+  sort_order : int
+  created_at : timestamp
+}
+
+' ==========================
+' MENU ITEMS
+' ==========================
+entity menu_items {
+  +id : varchar(36) <<PK>>
+  --
+  name : varchar(255)
+  description : text
+  base_price : decimal(10,2)
+  category_id : varchar(36) <<FK>>
+  image_url : varchar(500)
+  is_available : boolean
+  is_vegetarian : boolean
+  is_special : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+' ==========================
+' BRANCH PRICING
+' ==========================
+entity branch_pricing {
+  +id : varchar(36) <<PK>>
+  --
+  menu_item_id : varchar(36) <<FK>>
+  branch_id : varchar(36) <<FK>>
+  price : decimal(10,2)
+  created_at : timestamp
+}
+
+' ==========================
+' STOCK
+' ==========================
+entity stock {
+  +id : varchar(36) <<PK>>
+  --
+  branch_id : varchar(36) <<FK>>
+  menu_item_id : varchar(36) <<FK>>
+  quantity : int
+  is_in_stock : boolean
+  updated_at : timestamp
+}
+
+' ==========================
+' SEASONAL MENUS
+' ==========================
+entity seasonal_menus {
+  +id : varchar(36) <<PK>>
+  --
+  name : varchar(255)
+  start_at : datetime
+  end_at : datetime
+  is_active : boolean
+  created_at : timestamp
+}
+
+entity seasonal_menu_items {
+  +id : varchar(36) <<PK>>
+  --
+  seasonal_menu_id : varchar(36) <<FK>>
+  menu_item_id : varchar(36) <<FK>>
+}
+
+' ==========================
+' CARTS
+' ==========================
+entity carts {
+  +id : varchar(36) <<PK>>
+  --
+  user_id : varchar(36) <<FK>>
+  session_id : varchar(255)
+  branch_id : varchar(36) <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity cart_items {
+  +id : varchar(36) <<PK>>
+  --
+  cart_id : varchar(36) <<FK>>
+  menu_item_id : varchar(36) <<FK>>
+  quantity : int
+  notes : text
+}
+
+' ==========================
+' ORDERS
+' ==========================
+entity orders {
+  +id : varchar(36) <<PK>>
+  --
+  user_id : varchar(36) <<FK>>
+  branch_id : varchar(36) <<FK>>
+  status : enum(pending, confirmed, preparing, ready, delivered, cancelled)
+  total_amount : decimal(10,2)
+  delivery_address : text
+  delivery_phone : varchar(20)
+  notes : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity order_items {
+  +id : varchar(36) <<PK>>
+  --
+  order_id : varchar(36) <<FK>>
+  menu_item_id : varchar(36) <<FK>>
+  quantity : int
+  unit_price : decimal(10,2)
+  subtotal : decimal(10,2)
+  notes : text
+}
+
+' ==========================
+' PROMOTIONS
+' ==========================
+entity promotions {
+  +id : varchar(36) <<PK>>
+  --
+  promo_code : varchar(50) <<UNIQUE>>
+  title : varchar(255)
+  description : text
+  type : enum(percentage, fixed)
+  value : decimal(10,2)
+  min_order_amount : decimal(10,2)
+  max_discount_amount : decimal(10,2)
+  start_at : datetime
+  end_at : datetime
+  is_active : boolean
+  usage_limit : int
+  usage_count : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity promotion_items {
+  +id : varchar(36) <<PK>>
+  --
+  promotion_id : varchar(36) <<FK>>
+  menu_item_id : varchar(36) <<FK>>
+  category_id : varchar(36) <<FK>>
+}
+
+' ==========================
+' RELATIONSHIPS
+' ==========================
+categories ||--o{ menu_items
+menu_items ||--o{ branch_pricing
+branches ||--o{ branch_pricing
+
+branches ||--o{ stock
+menu_items ||--o{ stock
+
+seasonal_menus ||--o{ seasonal_menu_items
+menu_items ||--o{ seasonal_menu_items
+
+users ||--o{ carts
+branches ||--o{ carts
+carts ||--o{ cart_items
+menu_items ||--o{ cart_items
+
+users ||--o{ orders
+branches ||--o{ orders
+orders ||--o{ order_items
+menu_items ||--o{ order_items
+
+promotions ||--o{ promotion_items
+menu_items ||--o{ promotion_items
+categories ||--o{ promotion_items
+
+@enduml

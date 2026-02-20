@@ -6,6 +6,7 @@ const { generateId, generateToken, hashPassword, comparePassword, sanitizeUser }
 const { WARNINGS } = require('../utils/warnings');
 const { NotFoundError, ValidationError, UnauthorizedError } = require('../utils/errors');
 const { successResponse, createdResponse } = require('../utils/response');
+const authSaga = require('../services/authSaga');
 
 /**
  * Register User
@@ -148,10 +149,57 @@ const logout = async (req, res, next) => {
   }
 };
 
+/**
+ * Register User using Saga
+ */
+const registerSaga = async (req, res, next) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    if (!name || !email || !password) {
+      throw new ValidationError(WARNINGS.GENERAL.BAD_REQUEST('Name, email, and password are required'));
+    }
+
+    const result = await authSaga.register({ name, email, phone, password });
+    const data = result.data || result;
+
+    return createdResponse(res, {
+      user: data.user,
+      token: data.token
+    }, 'Registration successful via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update Profile using Saga
+ */
+const updateProfileSaga = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const { name, phone } = req.body;
+
+    if (!userId) {
+      throw new UnauthorizedError(WARNINGS.AUTH.UNAUTHORIZED);
+    }
+
+    const result = await authSaga.updateProfile({ userId, name, phone });
+    const data = result.data || result;
+
+    return successResponse(res, data.user, 'Profile updated via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getCurrentUser,
   updateProfile,
-  logout
+  logout,
+  // Saga endpoints
+  registerSaga,
+  updateProfileSaga
 };

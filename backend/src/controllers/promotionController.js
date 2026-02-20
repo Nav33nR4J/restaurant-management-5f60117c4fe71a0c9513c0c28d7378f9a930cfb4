@@ -7,6 +7,7 @@ const { generateId } = require('../utils/auth');
 const { WARNINGS } = require('../utils/warnings');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { successResponse, createdResponse, paginatedResponse } = require('../utils/response');
+const promotionSaga = require('../services/promotionSaga');
 
 /**
  * Map database fields to API response fields
@@ -417,6 +418,73 @@ const togglePromotionStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * Create Promotion using Saga
+ */
+const createPromotionSaga = async (req, res, next) => {
+  try {
+    const { title, description, type, value, min_order_amount, max_discount_amount, promo_code, start_at, end_at, is_active, custom_items } = req.body;
+
+    if (!title || !type) {
+      throw new ValidationError(WARNINGS.GENERAL.BAD_REQUEST('Title and type are required'));
+    }
+
+    const result = await promotionSaga.createPromotion({ title, description, type, value, min_order_amount, max_discount_amount, promo_code, start_at, end_at, is_active, custom_items });
+    const data = result.data || result;
+
+    return createdResponse(res, { id: data.id, title: data.title, promo_code: data.promo_code }, 'Promotion created via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update Promotion using Saga
+ */
+const updatePromotionSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, description, type, value, min_order_amount, max_discount_amount, promo_code, start_at, end_at, is_active, custom_items } = req.body;
+
+    await promotionSaga.updatePromotion({ promotion_id: id, title, description, type, value, min_order_amount, max_discount_amount, promo_code, start_at, end_at, is_active, custom_items });
+
+    return successResponse(res, { id }, 'Promotion updated via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete Promotion using Saga
+ */
+const deletePromotionSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    await promotionSaga.deletePromotion({ promotion_id: id });
+
+    return successResponse(res, null, 'Promotion deleted via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Toggle Promotion Status using Saga
+ */
+const togglePromotionStatusSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await promotionSaga.toggleStatus({ promotion_id: id });
+    const data = result.data || result;
+
+    return successResponse(res, { id: data.id, is_active: data.is_active }, 'Promotion status toggled via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPromotions,
   getPromotionById,
@@ -424,5 +492,10 @@ module.exports = {
   updatePromotion,
   deletePromotion,
   validatePromotion,
-  togglePromotionStatus
+  togglePromotionStatus,
+  // Saga endpoints
+  createPromotionSaga,
+  updatePromotionSaga,
+  deletePromotionSaga,
+  togglePromotionStatusSaga
 };

@@ -6,6 +6,7 @@ const { generateId } = require('../utils/auth');
 const { WARNINGS } = require('../utils/warnings');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { successResponse } = require('../utils/response');
+const { addToCart: cartAddToCart, updateCartItem: cartUpdateCartItem, removeFromCart: cartRemoveFromCart, clearCart: cartClearCart } = require('../services/cartSaga');
 
 const MAX_QUANTITY = 99;
 
@@ -256,11 +257,94 @@ const applyPromotion = async (req, res, next) => {
   }
 };
 
+/**
+ * Add to Cart using Saga
+ */
+const addToCartSaga = async (req, res, next) => {
+  try {
+    const { menu_item_id, quantity = 1, notes } = req.body;
+    const userId = getUserIdentifier(req);
+    const sessionId = req.session_id || req.ip;
+
+    if (!menu_item_id) {
+      throw new ValidationError(WARNINGS.GENERAL.BAD_REQUEST('menu_item_id is required'));
+    }
+
+    const result = await cartAddToCart({ menu_item_id, quantity, notes, userId, sessionId });
+    const data = result.data || result;
+
+    return successResponse(res, { cart_id: data.cart_id, quantity: data.quantity }, 'Item added to cart via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update Cart Item using Saga
+ */
+const updateCartItemSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    const userId = getUserIdentifier(req);
+    const sessionId = req.session_id || req.ip;
+
+    if (!quantity || quantity < 1) {
+      throw new ValidationError(WARNINGS.CART.INVALID_QUANTITY);
+    }
+
+    const result = await cartUpdateCartItem({ cart_item_id: id, quantity, userId, sessionId });
+    const data = result.data || result;
+
+    return successResponse(res, { id, quantity: data.quantity }, 'Cart updated via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove from Cart using Saga
+ */
+const removeFromCartSaga = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserIdentifier(req);
+    const sessionId = req.session_id || req.ip;
+
+    await cartRemoveFromCart({ cart_item_id: id, userId, sessionId });
+
+    return successResponse(res, null, 'Item removed from cart via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Clear Cart using Saga
+ */
+const clearCartSaga = async (req, res, next) => {
+  try {
+    const userId = getUserIdentifier(req);
+    const sessionId = req.session_id || req.ip;
+
+    await cartClearCart({ userId, sessionId });
+
+    return successResponse(res, null, 'Cart cleared via saga');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCart,
   addToCart,
   updateCartItem,
   removeFromCart,
   clearCart,
-  applyPromotion
+  applyPromotion,
+  // Saga endpoints
+  addToCartSaga,
+  updateCartItemSaga,
+  removeFromCartSaga,
+  clearCartSaga
 };

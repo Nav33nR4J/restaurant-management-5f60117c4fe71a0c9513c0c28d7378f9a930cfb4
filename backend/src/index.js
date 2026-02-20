@@ -11,6 +11,7 @@ const { WARNINGS } = require('./utils/warnings');
 
 // Import database configuration
 const { testConnection, initDatabase } = require('./config/database');
+const { initSagaLog } = require('./services/sagaLog');
 
 // Import routes
 const menuRoutes = require('./routes/menu');
@@ -18,6 +19,7 @@ const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/order');
 const promotionRoutes = require('./routes/promotion');
 const authRoutes = require('./routes/auth');
+const sagaRoutes = require('./routes/saga');
 
 const app = express();
 
@@ -39,6 +41,7 @@ app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/promotions', promotionRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/sagas', sagaRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
@@ -63,6 +66,9 @@ const startServer = async () => {
     
     // Initialize database schema
     await initDatabase();
+    
+    // Initialize saga log tables
+    await initSagaLog();
     
     // Start Express server
     const server = app.listen(PORT, () => {
