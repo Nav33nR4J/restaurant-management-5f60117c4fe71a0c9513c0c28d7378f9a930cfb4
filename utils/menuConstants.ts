@@ -118,6 +118,33 @@ export const SAMPLE_MENU_ITEMS = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  // UK Food Items
+  {
+    id: "uk-001",
+    name: "Fish and Chips",
+    description: "Classic British dish with battered cod and crispy chips",
+    price: 14.99,
+    basePrice: 14.99,
+    image: "https://images.unsplash.com/photo-1579208030886-b937da0925dc?w=400",
+    category: "Main Course",
+    isAvailable: true,
+    inStock: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "uk-002",
+    name: "Shepherd's Pie",
+    description: "Traditional pie with minced lamb and mashed potato topping",
+    price: 13.99,
+    basePrice: 13.99,
+    image: "https://images.unsplash.com/photo-1584672049763-73d41d9584a9?w=400",
+    category: "Main Course",
+    isAvailable: true,
+    inStock: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 // Default image for menu items

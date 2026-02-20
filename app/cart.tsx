@@ -29,8 +29,8 @@ interface Promotion {
   id: number;
   promo_code: string;
   title: string;
-  type: PromoType;
-  value: number;
+  discount_type: PromoType;
+  discount_value: number;
   start_at: string;
   end_at: string;
   status: PromoStatus;
@@ -176,10 +176,10 @@ const CouponCard = ({
   };
 
   const getDiscountText = () => {
-    if (promotion.type === "PERCENTAGE") {
-      return `${promotion.value}% OFF`;
-    } else if (promotion.type === "FIXED") {
-      return `₹${promotion.value} OFF`;
+    if (promotion.discount_type === "PERCENTAGE") {
+      return `${promotion.discount_value}% OFF`;
+    } else if (promotion.discount_type === "FIXED") {
+      return `₹${promotion.discount_value} OFF`;
     } else {
       return "Special Offer";
     }
@@ -270,12 +270,12 @@ const CouponsModal = ({
   // Check if a promotion is applicable to the cart
   const checkApplicability = (promotion: Promotion): boolean => {
     // For PERCENTAGE and FIXED types, they're generally applicable if they meet min order
-    if (promotion.type === "PERCENTAGE" || promotion.type === "FIXED") {
+    if (promotion.discount_type === "PERCENTAGE" || promotion.discount_type === "FIXED") {
       return (!promotion.min_order_amount || total >= promotion.min_order_amount);
     }
     
     // For CUSTOM_ITEMS, check if any cart item matches custom_items
-    if (promotion.type === "CUSTOM_ITEMS" && promotion.custom_items) {
+    if (promotion.discount_type === "CUSTOM_ITEMS" && promotion.custom_items) {
       const customItems = promotion.custom_items;
       const cartItemIds = cartItems.map(item => item.id);
       

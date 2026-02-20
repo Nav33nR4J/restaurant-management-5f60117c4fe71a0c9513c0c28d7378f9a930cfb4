@@ -31,8 +31,10 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -58,8 +60,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
     return "Items";
   };
 
-  const isExpired = new Date(promotion.end_at) < new Date();
-  const isNotStarted = new Date(promotion.start_at) > new Date();
+  const isExpired = promotion.end_at ? new Date(promotion.end_at) < new Date() : false;
+  const isNotStarted = promotion.start_at ? new Date(promotion.start_at) > new Date() : false;
   const isActive = promotion.status === "ACTIVE" && !isExpired && !isNotStarted;
 
   return (

@@ -21,14 +21,14 @@ interface PromotionFormProps {
     id?: string;
     promo_code: string;
     title: string;
-    discount_type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
-    discount_value: number;
+    type: "PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS";
+    value: number;
     min_order_amount: number;
     max_discount_amount?: number;
     usage_limit?: number | null;
-    start_date: string;
-    end_date: string;
-    is_active: boolean;
+    start_at: string;
+    end_at: string;
+    status: "ACTIVE" | "INACTIVE";
     description?: string;
     custom_items?: {
       item_id: string;
@@ -69,10 +69,10 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
   const [promoCode, setPromoCode] = useState(initialData?.promo_code || "");
   const [title, setTitle] = useState(initialData?.title || "");
   const [discountType, setDiscountType] = useState<"PERCENTAGE" | "FIXED" | "CUSTOM_ITEMS">(
-    initialData?.discount_type || "PERCENTAGE"
+    initialData?.type || "PERCENTAGE"
   );
   const [discountValue, setDiscountValue] = useState(
-    initialData?.discount_value?.toString() || ""
+    initialData?.value?.toString() || ""
   );
   const [minOrderAmount, setMinOrderAmount] = useState(
     initialData?.min_order_amount?.toString() || "0"
@@ -83,10 +83,10 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
   const [usageLimit, setUsageLimit] = useState(
     initialData?.usage_limit != null ? initialData.usage_limit.toString() : ""
   );
-  const [startDate, setStartDate] = useState(initialData?.start_date || "");
-  const [endDate, setEndDate] = useState(initialData?.end_date || "");
+  const [startDate, setStartDate] = useState(initialData?.start_at || "");
+  const [endDate, setEndDate] = useState(initialData?.end_at || "");
   const [description, setDescription] = useState(initialData?.description || "");
-  const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
+  const [isActive, setIsActive] = useState(initialData?.status === "ACTIVE");
   const [showMenuPicker, setShowMenuPicker] = useState(false);
   const [customItems, setCustomItems] = useState(
     initialData?.custom_items || []
@@ -133,22 +133,29 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({
 
     // Format dates to datetime
     const formatDateTime = (dateStr: string) => {
-      return new Date(dateStr).toISOString().replace("T", " ").substring(0, 19);
+      if (!dateStr || dateStr.trim() === '') {
+        return null;
+      }
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return null;
+      }
+      return date.toISOString().replace('T', ' ').substring(0, 19);
     };
 
     onSubmit({
       id: initialData?.id,
       promo_code: promoCode.toUpperCase().trim(),
       title: title.trim(),
-      discount_type: discountType,
-      discount_value: discountType === "CUSTOM_ITEMS" ? 0 : parseFloat(discountValue),
+      type: discountType,
+      value: discountType === "CUSTOM_ITEMS" ? 0 : parseFloat(discountValue),
       min_order_amount: minOrderAmount ? parseFloat(minOrderAmount) : 0,
       max_discount_amount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
       usage_limit: usageLimit ? parseInt(usageLimit) : null,
       start_at: formatDateTime(startDate),
       end_at: formatDateTime(endDate),
       description: description.trim() || null,
-      status: isActive ? "ACTIVE" : "INACTIVE",
+      is_active: isActive,
       custom_items: discountType === "CUSTOM_ITEMS" ? customItems : [],
     });
   };

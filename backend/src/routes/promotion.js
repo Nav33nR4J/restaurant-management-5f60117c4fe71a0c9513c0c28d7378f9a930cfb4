@@ -10,6 +10,7 @@ router.get('/:id', promotionController.getPromotionById);
 router.post('/', promotionController.createPromotion);
 router.put('/:id', promotionController.updatePromotion);
 router.delete('/:id', promotionController.deletePromotion);
+router.patch('/:id/toggle', promotionController.togglePromotionStatus);
 router.post('/validate', promotionController.validatePromotion);
 
 module.exports = router;

@@ -138,8 +138,30 @@ export const promotionApi = {
 
 // Menu Items API
 export const menuApi = {
-  // Get all menu items
-  getAll: () => api.get<{ success: boolean; data: MenuItem[] }>("/menu-items"),
+  // Get all menu items from backend (with high limit to get all items)
+  getAll: (limit: number = 100) => api.get<{ success: boolean; data: any[] }>(`/menu/items?limit=${limit}`),
+  // Create a new menu item
+  create: (data: {
+    name: string;
+    description?: string;
+    price: number;
+    category_id?: string;
+    image_url?: string;
+    is_vegetarian?: boolean;
+    is_special?: boolean;
+    is_seasonal?: boolean;
+  }) => api.post<{ success: boolean; data: { id: string } }>("/menu/items", data),
+  // Update a menu item
+  update: (id: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    category_id?: string;
+    image_url?: string;
+    is_available?: boolean;
+  }) => api.put<{ success: boolean }>(`/menu/items/${id}`, data),
+  // Delete a menu item
+  delete: (id: string) => api.delete<{ success: boolean }>(`/menu/items/${id}`),
 };
 
 export default api;

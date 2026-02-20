@@ -114,20 +114,23 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- ===========================================
--- 8. Promotions Table (no dependencies)
+-- 8. Promotions Table (updated schema to match frontend)
 -- ===========================================
 CREATE TABLE IF NOT EXISTS promotions (
     id VARCHAR(36) PRIMARY KEY,
+    promo_code VARCHAR(50) UNIQUE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    discount_type ENUM('percentage', 'fixed') NOT NULL,
-    discount_value DECIMAL(10,2) NOT NULL,
-    min_order_amount DECIMAL(10,2) DEFAULT 0,
-    max_discount DECIMAL(10,2),
-    code VARCHAR(50) UNIQUE,
-    start_date DATE,
-    end_date DATE,
+    type ENUM('percentage', 'fixed', 'custom') NOT NULL,
+    value DECIMAL(10,2) NOT NULL DEFAULT 0,
+    start_at DATETIME,
+    end_at DATETIME,
     is_active BOOLEAN DEFAULT true,
+    usage_limit INT DEFAULT NULL,
+    usage_count INT DEFAULT 0,
+    min_order_amount DECIMAL(10,2) DEFAULT 0,
+    max_discount_amount DECIMAL(10,2),
+    custom_items JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -155,7 +158,7 @@ CREATE INDEX idx_carts_session ON carts(session_id);
 CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_order_items_order ON order_items(order_id);
-CREATE INDEX idx_promotions_code ON promotions(code);
+CREATE INDEX idx_promotions_code ON promotions(promo_code);
 CREATE INDEX idx_promotions_active ON promotions(is_active);
 
 -- ===========================================

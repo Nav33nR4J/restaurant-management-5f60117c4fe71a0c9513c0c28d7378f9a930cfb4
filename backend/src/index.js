@@ -9,6 +9,9 @@ const morgan = require('morgan');
 const { AppError, handleError } = require('./utils/errors');
 const { WARNINGS } = require('./utils/warnings');
 
+// Import database configuration
+const { testConnection, initDatabase } = require('./config/database');
+
 // Import routes
 const menuRoutes = require('./routes/menu');
 const cartRoutes = require('./routes/cart');
@@ -47,17 +50,39 @@ app.use(handleError);
 
 // Start Server
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
 
-// Graceful Shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
+// Initialize database connection and schema before starting server
+const startServer = async () => {
+  try {
+    // Test database connection
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      console.error('❌ Failed to connect to database. Server will not start.');
+      process.exit(1);
+    }
+    
+    // Initialize database schema
+    await initDatabase();
+    
+    // Start Express server
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+
+    // Graceful Shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;

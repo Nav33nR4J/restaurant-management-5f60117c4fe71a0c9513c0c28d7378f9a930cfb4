@@ -13,18 +13,28 @@ import { api } from "../../utils/promotions/api";
 const transformPromotionToFormData = (promotion?: Promotion) => {
   if (!promotion) return undefined;
   
+  // Handle date format - remove time part if present
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    // If it contains space, it's datetime - extract just the date part
+    if (dateStr.includes(' ')) {
+      return dateStr.split(' ')[0];
+    }
+    return dateStr;
+  };
+  
   return {
     id: promotion.id,
     promo_code: promotion.promo_code,
     title: promotion.title,
-    discount_type: promotion.discount_type,
-    discount_value: promotion.discount_value,
+    type: promotion.type,
+    value: promotion.value,
     min_order_amount: promotion.min_order_amount,
     max_discount_amount: promotion.max_discount_amount ?? undefined,
     usage_limit: promotion.usage_limit ?? null,
-    start_date: promotion.start_at.split(' ')[0], // Extract date part
-    end_date: promotion.end_at.split(' ')[0],
-    is_active: promotion.status === 'ACTIVE',
+    start_at: formatDate(promotion.start_at),
+    end_at: formatDate(promotion.end_at),
+    status: promotion.status,
     description: promotion.description || undefined,
     custom_items: promotion.custom_items as CustomItemDiscount[] | undefined,
   };
@@ -46,10 +56,30 @@ function CreatePromotionContent() {
   const handleSubmit = useCallback(async (data: any) => {
     setIsLoading(true);
     try {
+      // Transform frontend field names to match backend API expectations
+      const apiData = {
+        promo_code: data.promo_code,
+        title: data.title,
+        // Backend expects type as PERCENTAGE, FIXED, or CUSTOM_ITEMS
+        type: data.type,
+        // Ensure value is a number (can be 0 for CUSTOM_ITEMS type)
+        value: data.value != null ? Number(data.value) : 0,
+        min_order_amount: data.min_order_amount,
+        max_discount_amount: data.max_discount_amount,
+        usage_limit: data.usage_limit,
+        // Backend expects start_at and end_at
+        start_at: data.start_at,
+        end_at: data.end_at,
+        description: data.description,
+        // Backend expects is_active boolean
+        is_active: data.is_active === true,
+        custom_items: data.custom_items || [],
+      };
+
       if (isEditing && editingPromotion?.id) {
-        await api.put(`/promotions/${editingPromotion.id}`, data);
+        await api.put(`/promotions/${editingPromotion.id}`, apiData);
       } else {
-        await api.post("/promotions", data);
+        await api.post("/promotions", apiData);
       }
       router.back();
     } catch (error: any) {
@@ -58,6 +88,9 @@ function CreatePromotionContent() {
       const message = error?.response?.data?.message;
       if (status === 409 && message) {
         Alert.alert("Duplicate Promo Code", message);
+      } else if (status === 400 && message) {
+        // Handle validation errors (including date validation)
+        Alert.alert("Validation Error", message);
       } else {
         Alert.alert("Error", "Failed to save promotion. Please try again.");
       }

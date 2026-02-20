@@ -19,6 +19,7 @@ import {
   removeMenuItemFromSeasonalMenu,
 } from '../../database/db';
 import { Loggers } from '../../utils/logger';
+import { menuApi } from '../../utils/promotions/api';
 
 // Generate unique ID
 const generateId = (): string => {
@@ -37,23 +38,108 @@ export const initializeMenuDatabase = createAsyncThunk(
 );
 
 /**
- * Load all menu items from database
+ * Transform backend menu item to frontend format
+ */
+const transformBackendMenuItem = (backendItem: any): MenuItem => {
+  const now = new Date().toISOString();
+  return {
+    id: backendItem.id,
+    name: backendItem.name,
+    description: backendItem.description || '',
+    price: parseFloat(backendItem.final_price || backendItem.price || 0),
+    basePrice: parseFloat(backendItem.price || 0),
+    image: backendItem.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+    category: backendItem.category_name || backendItem.category || 'Uncategorized',
+    isAvailable: backendItem.is_available !== false,
+    inStock: backendItem.is_available !== false,
+    seasonalMenuId: undefined,
+    createdAt: backendItem.created_at || now,
+    updatedAt: backendItem.updated_at || now,
+  };
+};
+
+/**
+ * Load all menu items - tries backend API first, falls back to local DB
  */
 export const loadMenuItems = createAsyncThunk(
   'menu/loadItems',
-  async () => {
-    const items = await getAllMenuItems();
-    Loggers.menu.info(`Loaded ${items.length} menu items`);
-    return items;
+  async (_, { rejectWithValue }) => {
+    try {
+      // Try to fetch ALL items from backend API (use high limit to get all)
+      const response = await menuApi.getAll();
+      if (response.data && response.data.success) {
+        // Handle both paginated and non-paginated responses
+        const backendItems = response.data.data || [];
+        const transformedItems = backendItems.map(transformBackendMenuItem);
+        
+        // Try to sync to local DB for offline use (best effort)
+        try {
+          await initDatabase();
+          for (const item of transformedItems) {
+            try {
+              await dbAddMenuItem(item);
+            } catch (e) {
+              // Item might already exist, ignore
+            }
+          }
+          Loggers.menu.info(`Loaded ${transformedItems.length} menu items from backend API`);
+        } catch (dbError) {
+          Loggers.menu.warn('Failed to sync to local DB, using backend data only');
+        }
+        
+        return transformedItems;
+      }
+    } catch (error: any) {
+      Loggers.menu.warn('Failed to fetch from backend API, falling back to local DB:', error.message);
+    }
+    
+    // Fallback to local SQLite database
+    try {
+      const localItems = await getAllMenuItems();
+      Loggers.menu.info(`Loaded ${localItems.length} menu items from local DB`);
+      return localItems;
+    } catch (localError: any) {
+      Loggers.menu.error('Failed to load from local DB:', localError);
+      return rejectWithValue('Failed to load menu items from both API and local DB');
+    }
   }
 );
 
 /**
- * Add a new menu item (HQ only)
+ * Add a new menu item (HQ only) - saves to backend API
  */
 export const addMenuItemAsync = createAsyncThunk(
   'menu/addItem',
   async (item: Omit<MenuItem, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+    try {
+      // Try to create on backend API first
+      const response = await menuApi.create({
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category_id: item.category, // Backend expects category_id, frontend uses category name
+        image_url: item.image,
+        is_vegetarian: false,
+        is_special: false,
+        is_seasonal: false,
+      });
+      
+      if (response.data && response.data.success) {
+        const now = new Date().toISOString();
+        const newItem: MenuItem = {
+          ...item,
+          id: response.data.data?.id || generateId(),
+          createdAt: now,
+          updatedAt: now,
+        };
+        Loggers.menu.info(`Added menu item to backend: ${item.name}`);
+        return newItem;
+      }
+    } catch (error: any) {
+      Loggers.menu.warn('Failed to add to backend, falling back to local DB:', error.message);
+    }
+    
+    // Fallback to local SQLite if backend fails
     try {
       const now = new Date().toISOString();
       const newItem: MenuItem = {
@@ -64,7 +150,7 @@ export const addMenuItemAsync = createAsyncThunk(
       };
       
       await dbAddMenuItem(newItem);
-      Loggers.menu.info(`Added menu item: ${newItem.name}`);
+      Loggers.menu.info(`Added menu item to local DB: ${newItem.name}`);
       return newItem;
     } catch (error) {
       Loggers.menu.error('Failed to add menu item', error);
@@ -74,11 +160,27 @@ export const addMenuItemAsync = createAsyncThunk(
 );
 
 /**
- * Update an existing menu item (HQ only)
+ * Update an existing menu item (HQ only) - updates backend API
  */
 export const updateMenuItemAsync = createAsyncThunk(
   'menu/updateItem',
   async (item: MenuItem, { rejectWithValue }) => {
+    try {
+      // Try to update on backend API first
+      await menuApi.update(item.id, {
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category_id: item.category,
+        image_url: item.image,
+        is_available: item.isAvailable,
+      });
+      Loggers.menu.info(`Updated menu item on backend: ${item.name}`);
+    } catch (error: any) {
+      Loggers.menu.warn('Failed to update on backend, updating local DB only:', error.message);
+    }
+    
+    // Also update local SQLite
     try {
       const updatedItem = {
         ...item,
@@ -86,7 +188,7 @@ export const updateMenuItemAsync = createAsyncThunk(
       };
       
       await dbUpdateMenuItem(updatedItem);
-      Loggers.menu.info(`Updated menu item: ${updatedItem.name}`);
+      Loggers.menu.info(`Updated menu item on local DB: ${updatedItem.name}`);
       return updatedItem;
     } catch (error) {
       Loggers.menu.error('Failed to update menu item', error);
@@ -96,19 +198,29 @@ export const updateMenuItemAsync = createAsyncThunk(
 );
 
 /**
- * Delete a menu item (HQ only)
+ * Delete a menu item (HQ only) - deletes from backend API
  */
 export const deleteMenuItemAsync = createAsyncThunk(
   'menu/deleteItem',
   async (id: string, { rejectWithValue }) => {
     try {
+      // Try to delete from backend API first
+      await menuApi.delete(id);
+      Loggers.menu.info(`Deleted menu item from backend: ${id}`);
+    } catch (error: any) {
+      Loggers.menu.warn('Failed to delete from backend, trying local DB:', error.message);
+    }
+    
+    // Also delete from local SQLite
+    try {
       await dbDeleteMenuItem(id);
-      Loggers.menu.info(`Deleted menu item: ${id}`);
-      return id;
+      Loggers.menu.info(`Deleted menu item from local DB: ${id}`);
     } catch (error) {
-      Loggers.menu.error('Failed to delete menu item', error);
+      Loggers.menu.error('Failed to delete menu item from local DB', error);
       return rejectWithValue('Failed to delete menu item');
     }
+    
+    return id;
   }
 );
 
